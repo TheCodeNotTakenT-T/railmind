@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "npx tsx scripts/seed-db.ts",
+    "test:engine": "npx tsx scripts/test-engine.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.80",
