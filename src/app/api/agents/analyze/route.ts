@@ -2,6 +2,7 @@ export const maxDuration = 120;
 
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { orchestrator } from "@/lib/agents/orchestrator";
 
 export async function POST(request: Request) {
   try {
@@ -34,33 +35,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Incident not found: ${incidentId}` }, { status: 404 });
     }
 
-    // Update incident status to 'analyzing'
-    const { error: updateError } = await supabase
-      .from("incidents")
-      .update({ status: "analyzing" })
-      .eq("id", incidentId);
-
-    if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
-    }
-
-    // Insert a placeholder agent_log entry
-    const { error: logError } = await supabase.from("agent_logs").insert({
-      agent_name: "Orchestrator",
-      action: "Pipeline initiated — agents not yet built (Day 3)",
-      input: { incidentId },
-      output: { status: "stub" },
-      duration_ms: 0,
-      incident_id: incidentId,
-    });
-
-    if (logError) {
-      console.error("Warning: failed to create agent log in analyze stub:", logError.message);
-    }
+    // Call the orchestrator to run the analysis pipeline
+    await orchestrator.handleIncident(incidentId);
 
     return NextResponse.json({
       success: true,
-      summary: "Agent pipeline stub — full implementation in Day 3",
+      summary: "Orchestrator analysis completed",
       incidentId,
     });
   } catch (err: any) {

@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { sentinelAgent } from "./sentinel";
 
 export class Orchestrator {
   async handleIncident(incidentId: string): Promise<void> {
@@ -28,27 +29,56 @@ export class Orchestrator {
     console.log(`🤖 Orchestrator: Starting pipeline for incident ${incidentId}`);
     console.log(`   Train: ${incident.trigger_train_id} | Delay: ${incident.delay_minutes} min`);
 
-    // PIPELINE STAGES (agents will be added here as they're built):
-    // Stage 1: Sentinel (Phase 3.2)
-    // Stage 2: Cascade Analyzer (Phase 3.3)
-    // Stage 3: Resolution (Phase 3.4)
-    // Stage 4: Communication (Phase 3.5)
+    // STAGE 1: Sentinel Analysis
+    console.log("📡 Stage 1: Sentinel Agent...");
+    const sentinelOutput = await sentinelAgent.run({
+      incidentId,
+      context: { trigger_train_id: incident.trigger_train_id, delay_minutes: incident.delay_minutes },
+    });
 
-    // For now, log a placeholder entry
-    const { error: logError } = await supabase.from("agent_logs").insert({
+    const analysis = sentinelOutput.data?.analysis as any;
+
+    if (!sentinelOutput.success || !analysis?.recommendAnalysis) {
+      // Low severity or agent failed — close incident without cascade analysis
+      await supabase
+        .from("incidents")
+        .update({
+          status: "resolved",
+          resolved_at: new Date().toISOString(),
+        })
+        .eq("id", incidentId);
+
+      await supabase.from("agent_logs").insert({
+        agent_name: "Orchestrator",
+        action: "Pipeline complete: Low severity — incident resolved",
+        input: { incidentId },
+        output: { sentinelOutput, status: "resolved" },
+        duration_ms: 0,
+        incident_id: incidentId,
+      });
+
+      console.log("✅ Orchestrator: Low severity — incident closed without cascade analysis");
+      return;
+    }
+
+    console.log(`✅ Stage 1 complete: ${analysis.severity} severity — proceeding to cascade analysis`);
+
+    // Stages 2-4 will be added in phases 3.3-3.5
+    // For now update status back to active (analyzed by sentinel but waiting for cascade)
+    await supabase
+      .from("incidents")
+      .update({ status: "active" })
+      .eq("id", incidentId);
+
+    // Log entry for orchestrator
+    await supabase.from("agent_logs").insert({
       agent_name: "Orchestrator",
-      action: "Pipeline scaffolded — agents being added",
+      action: "Stage 1 (Sentinel) complete — waiting for next stages",
       input: { incidentId },
-      output: { stages_completed: 0, total_stages: 4 },
+      output: { sentinelOutput, status: "active" },
       duration_ms: 0,
       incident_id: incidentId,
     });
-
-    if (logError) {
-      console.error(`Orchestrator failed to insert audit log: ${logError.message}`);
-    }
-
-    console.log("✅ Orchestrator scaffold complete");
   }
 }
 
