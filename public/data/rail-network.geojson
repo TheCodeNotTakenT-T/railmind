@@ -1,0 +1,158 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Delhi-Mumbai Main Line",
+        "zone": "mixed",
+        "type": "MainLine"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [77.2210, 28.6415],
+          [77.2536, 28.5888],
+          [77.6744, 27.4925],
+          [78.1878, 26.2155],
+          [78.5562, 25.4484],
+          [77.4106, 23.2684],
+          [77.7850, 22.6144],
+          [75.8647, 25.2195],
+          [75.0353, 23.3516],
+          [73.1812, 22.3116],
+          [72.8406, 21.2046],
+          [72.8193, 18.9696]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Delhi-Howrah Main Line",
+        "zone": "mixed",
+        "type": "MainLine"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [77.2210, 28.6415],
+          [80.3514, 26.4536],
+          [81.8432, 25.4448],
+          [83.1232, 25.2818],
+          [85.1376, 25.6022],
+          [86.4276, 23.7924],
+          [88.3424, 22.5836]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Delhi-Chennai Grand Trunk",
+        "zone": "mixed",
+        "type": "MainLine"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [77.2210, 28.6415],
+          [77.9906, 27.1578],
+          [78.5562, 25.4484],
+          [77.7850, 22.6144],
+          [79.0882, 21.1524],
+          [78.5016, 17.4344],
+          [80.2707, 13.0827]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Mumbai-Bangalore",
+        "zone": "mixed",
+        "type": "MainLine"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [72.8354, 18.9400],
+          [73.8744, 18.5289],
+          [75.9064, 17.6599],
+          [78.5016, 17.4344],
+          [77.3712, 15.1664],
+          [77.5697, 12.9781]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Delhi-Amritsar",
+        "zone": "mixed",
+        "type": "MainLine"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [77.2210, 28.6415],
+          [76.8378, 30.3414],
+          [75.8486, 30.9025],
+          [74.8723, 31.6340]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Mumbai-Ahmedabad",
+        "zone": "mixed",
+        "type": "MainLine"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [72.8193, 18.9696],
+          [72.8406, 21.2046],
+          [73.1812, 22.3116],
+          [72.5998, 23.0274]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Howrah-Chennai Coastal",
+        "zone": "mixed",
+        "type": "MainLine"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [88.3424, 22.5836],
+          [85.8436, 20.2644],
+          [83.2986, 17.7286],
+          [80.6204, 16.5186],
+          [80.2707, 13.0827]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Delhi-Jaipur-Ahmedabad",
+        "zone": "mixed",
+        "type": "MainLine"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [77.2210, 28.6415],
+          [75.7878, 26.9196],
+          [74.6402, 26.4568],
+          [72.5998, 23.0274]
+        ]
+      }
+    }
+  ]
+}
