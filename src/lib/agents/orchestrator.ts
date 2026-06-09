@@ -1,6 +1,8 @@
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { sentinelAgent } from "./sentinel";
 import { cascadeAnalyzerAgent } from "./cascade-analyzer";
+import { resolutionAgent } from "./resolution";
+import { communicationAgent } from "./communication";
 
 export class Orchestrator {
   async handleIncident(incidentId: string): Promise<void> {
@@ -75,18 +77,36 @@ export class Orchestrator {
     })
     console.log(`✅ Stage 2 complete: ${cascadeOutput.summary}`)
 
-    // Stages 3-4 still coming (Resolution + Communication)
+    // STAGE 3: Resolution Options
+    console.log('⚡ Stage 3: Resolution Agent...')
+    const resolutionOutput = await resolutionAgent.run({
+      incidentId,
+      context: { cascadeOutput: cascadeOutput.data }
+    })
+    console.log(`✅ Stage 3 complete: ${resolutionOutput.summary}`)
+
+    // STAGE 4: Communication
+    console.log('📡 Stage 4: Communication Agent...')
+    const commOutput = await communicationAgent.run({
+      incidentId,
+      context: { resolutionOutput: resolutionOutput.data }
+    })
+    console.log(`✅ Stage 4 complete: ${commOutput.summary}`)
+
+    // Pipeline complete — mark incident as fully analyzed
     await supabase
       .from('incidents')
       .update({ status: 'active' })
       .eq('id', incidentId)
 
+    console.log(`🎉 Full pipeline complete for incident ${incidentId}`)
+
     // Log entry for orchestrator
     await supabase.from("agent_logs").insert({
       agent_name: "Orchestrator",
-      action: "Stage 2 (Cascade) complete — waiting for next stages",
+      action: "Pipeline complete — all stages analyzed",
       input: { incidentId },
-      output: { sentinelOutput, cascadeOutput, status: "active" },
+      output: { sentinelOutput, cascadeOutput, resolutionOutput, commOutput, status: "active" },
       duration_ms: 0,
       incident_id: incidentId,
     });

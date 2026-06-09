@@ -194,6 +194,38 @@ Then output your severity assessment as a JSON object.
         throw new Error("Sentinel output missing required fields");
       }
 
+      // Enforce severity rules — LLM provides context, rules enforce correctness
+      const enforceRules = (severity: string, delay: number, station: string): 'low' | 'medium' | 'high' | 'critical' => {
+        const MAJOR_JUNCTIONS = ['NDLS','NZM','HWH','CSTM','BCT','MAS','SBC','PNBE','CNB','SC','DDU','NGP','BPL','LKO','ADI']
+        const isMajorJunction = MAJOR_JUNCTIONS.includes(station?.toUpperCase())
+        
+        if (delay < 6) return 'low'
+        if (delay < 10) return 'medium'
+        if (delay >= 20 && isMajorJunction) return 'critical'
+        if (delay >= 15 || isMajorJunction) return 'high'
+        return 'medium'
+      }
+
+      // Apply enforcement
+      analysis.severity = enforceRules(analysis.severity, delayMinutes, analysis.affectedStation)
+      analysis.recommendAnalysis = analysis.severity !== 'low'
+
+      // If affectedStation is Unknown or empty, extract from train route
+      if (!analysis.affectedStation || analysis.affectedStation === 'Unknown') {
+        // Fetch train to get current station from route
+        const { data: trainData } = await supabase
+          .from('trains')
+          .select('route, current_station_index, name')
+          .eq('id', trainId)
+          .single()
+        
+        if (trainData?.route && trainData.route.length > 0) {
+          const idx = trainData.current_station_index || 0
+          analysis.affectedStation = trainData.route[idx] || trainData.route[0]
+          analysis.trainName = trainData.name || analysis.trainName
+        }
+      }
+
       // Store analysis in incidents table
       const { error: updateIncidentError } = await supabase
         .from("incidents")
