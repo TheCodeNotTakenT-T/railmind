@@ -49,12 +49,14 @@ export function useIncidents(statusFilter: "active" | "resolved" | "all" = "acti
 
   // Realtime Subscription
   useEffect(() => {
+    let isMounted = true;
     const channel = supabase
-      .channel("incidents-realtime")
+      .channel(`incidents-rt-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "incidents" },
         (payload) => {
+          if (!isMounted) return;
           const newIncident = payload.new as Incident;
           
           // Apply status filters on insert
@@ -72,6 +74,7 @@ export function useIncidents(statusFilter: "active" | "resolved" | "all" = "acti
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "incidents" },
         (payload) => {
+          if (!isMounted) return;
           const updatedIncident = payload.new as Incident;
           
           setIncidents((prev) => {
@@ -93,10 +96,15 @@ export function useIncidents(statusFilter: "active" | "resolved" | "all" = "acti
             return sortIncidents(updated);
           });
         }
-      )
-      .subscribe();
+      );
+
+    // Defer subscribe to next microtask so the channel is fully configured
+    Promise.resolve().then(() => {
+      if (isMounted) channel.subscribe();
+    });
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
   }, [statusFilter]);

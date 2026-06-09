@@ -53,15 +53,16 @@ export function useTrains() {
 
   // Realtime subscription
   useEffect(() => {
+    let isMounted = true;
     const channel = supabase
-      .channel("trains-realtime")
+      .channel(`trains-rt-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "trains" },
         (payload) => {
+          if (!isMounted) return;
           const updatedTrain = payload.new as Train;
           setTrains((prev) => {
-            // Check if train exists, if not add it, otherwise update
             const exists = prev.some((t) => t.id === updatedTrain.id);
             const updated = exists
               ? prev.map((t) => (t.id === updatedTrain.id ? updatedTrain : t))
@@ -69,10 +70,15 @@ export function useTrains() {
             return sortTrains(updated);
           });
         }
-      )
-      .subscribe();
+      );
+
+    // Defer subscribe to next microtask so the channel is fully configured
+    Promise.resolve().then(() => {
+      if (isMounted) channel.subscribe();
+    });
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
   }, []);
