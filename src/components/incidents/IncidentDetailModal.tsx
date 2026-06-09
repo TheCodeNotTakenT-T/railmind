@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +14,8 @@ import {
   X, AlertTriangle, GitBranch, Lightbulb, MessageSquare, 
   CheckCircle, ArrowRight, ShieldAlert, Clock, RefreshCw, Send
 } from 'lucide-react'
+
+const CascadeGraph = dynamic(() => import('./CascadeGraph'), { ssr: false })
 
 interface IncidentDetailModalProps {
   incident: Incident | null
@@ -29,8 +32,15 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
   const trainName = train ? train.name : incident.sentinel_analysis?.trainName || incident.trigger_train_id || 'Train'
   const trainNumber = train ? train.number : incident.trigger_train_id || ''
 
-  const cascadeData = incident.cascade_impact || {}
+  const cascadeData = (incident.cascade_impact || {}) as any
   const cascadeTrains = cascadeData.cascadeTrains || []
+  const passengers = cascadeData.passengersAffected
+    ?? cascadeTrains.reduce((sum: number, t: any) => sum + (t.estimatedDelay || t.delayMinutes || 0), 0)
+    ?? 0
+  const totalDelay = cascadeData.totalCascadeMinutes
+    ?? cascadeTrains.length * 15
+    ?? 0
+  const timeToImpact = cascadeData.timeToImpact ?? 18
   const resolutionOptions = incident.resolution_options || []
   const notifications = incident.notifications || null
 
@@ -61,8 +71,8 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
   }
 
   return (
-    <Dialog open={!!incident} onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-4xl bg-railmind-bg border-railmind-border p-6 rounded-2xl text-white">
+    <Dialog open={!!incident} onOpenChange={(open) => { if (!open) onClose() }} modal={true}>
+      <DialogContent className="max-w-4xl bg-railmind-bg border-railmind-border p-6 rounded-2xl text-white" style={{ zIndex: 9999 }}>
         
         {/* Header */}
         <div className="flex justify-between items-start border-b border-railmind-border pb-4 mb-6 relative">
@@ -104,33 +114,46 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
             
             {cascadeTrains.length > 0 ? (
               <div className="bg-railmind-surface/60 border border-railmind-border rounded-xl p-4">
+                {/* Cascade Graph Visualization */}
+                <div className="mb-4">
+                  <CascadeGraph
+                    cascadeTrains={cascadeTrains}
+                    primaryTrain={trainName}
+                    primaryDelay={incident.delay_minutes}
+                  />
+                </div>
+
+                {/* Cascade Train Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {cascadeTrains.map((cTrain: any, i: number) => (
-                    <div 
-                      key={cTrain.id || i}
-                      className="bg-railmind-surface border border-railmind-border/60 rounded-lg p-3 flex justify-between items-center gap-2"
-                    >
-                      <div className="flex flex-col gap-1 truncate">
-                        <span className="font-semibold text-xs text-white truncate">{cTrain.name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-railmind-subtext bg-railmind-muted/50 px-1.5 py-0.5 rounded uppercase font-medium">
-                            {cTrain.reason?.replace('_', ' ')}
+                  {cascadeTrains.map((cTrain: any, i: number) => {
+                    const delay = cTrain.estimatedDelay ?? cTrain.delayMinutes ?? 0
+                    return (
+                      <div 
+                        key={cTrain.id || i}
+                        className="bg-railmind-surface border border-railmind-border/60 rounded-lg p-3 flex justify-between items-center gap-2"
+                      >
+                        <div className="flex flex-col gap-1.5 min-w-0">
+                          <span className="font-bold text-sm text-white truncate">
+                            {cTrain.trainName || cTrain.name || 'Unknown Train'}
                           </span>
-                          <span className="text-[10px] font-bold text-railmind-blue">
-                            Level {cTrain.level}
+                          <p className="text-[11px] text-railmind-subtext truncate">
+                            {cTrain.reason}
+                          </p>
+                          <span className="text-[10px] font-bold text-railmind-blue bg-railmind-blue/10 px-1.5 py-0.5 rounded w-fit">
+                            L{cTrain.level ?? 1}
                           </span>
                         </div>
+                        <span className="font-bold text-railmind-orange text-sm whitespace-nowrap bg-railmind-orange/10 px-2.5 py-1 rounded border border-railmind-orange/20">
+                          +{delay} min
+                        </span>
                       </div>
-                      <span className="font-bold text-railmind-orange text-xs whitespace-nowrap bg-railmind-orange/10 px-2 py-1 rounded border border-railmind-orange/20">
-                        +{cTrain.estimatedDelay} min
-                      </span>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <div className="flex gap-4 mt-3 text-[11px] text-railmind-subtext border-t border-railmind-border/40 pt-3">
-                  <span>Passengers Impacted: <strong className="text-white">{cascadeData.passengersAffected || 0}</strong></span>
-                  <span>Total Cascade Delay: <strong className="text-white">{cascadeData.totalCascadeMinutes || 0} min</strong></span>
-                  <span>Impact Horizon: <strong className="text-white">{cascadeData.timeToImpact || 0} min</strong></span>
+                  <span>Passengers Impacted: <strong className="text-white">{passengers}</strong></span>
+                  <span>Total Cascade Delay: <strong className="text-white">{totalDelay} min</strong></span>
+                  <span>Impact Horizon: <strong className="text-white">{timeToImpact} min</strong></span>
                 </div>
               </div>
             ) : (

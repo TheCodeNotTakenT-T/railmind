@@ -189,4 +189,31 @@
 
 .leaflet-container {
   font-family: inherit !important;
+  z-index: 1 !important;
+  isolation: isolate;
+}
+
+.leaflet-pane {
+  z-index: auto !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10 !important;
+}
+
+/* Ensure map wrapper stays in its lane */
+.map-wrapper {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* Radix Dialog z-index overrides — above everything including Leaflet */
+[data-radix-dialog-overlay] {
+  z-index: 9998 !important;
+}
+[data-radix-dialog-content] {
+  z-index: 9999 !important;
 }

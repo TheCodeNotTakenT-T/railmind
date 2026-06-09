@@ -8,6 +8,7 @@ import AgentFeed from '@/components/agents/AgentFeed'
 import NotificationPreview from '@/components/notifications/NotificationPreview'
 import DemoLauncher from '@/components/DemoLauncher'
 import { useTrains, useIncidents } from '@/hooks'
+import { getStatusColor } from '@/lib/utils'
 import type { Train, Incident } from '@/lib/types'
 
 const RailwayMap = dynamic(
@@ -20,14 +21,15 @@ export default function DashboardPage() {
   const { incidents: activeIncidents } = useIncidents('active')
   const { incidents: resolvedIncidents } = useIncidents('resolved')
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
+  const [selectedTrain, setSelectedTrain] = useState<Train | null>(null)
 
   const activeCount = activeIncidents.length
   const resolvedCount = resolvedIncidents.length
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0e1a] text-white overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#0a0e1a] text-white">
       {/* HEADER BAR */}
-      <header className="h-14 border-b border-railmind-border bg-railmind-surface/80 backdrop-blur px-6 flex items-center justify-between shrink-0 z-10">
+      <header className="h-14 flex-shrink-0 flex items-center justify-between px-6 border-b border-railmind-border bg-[#0d1117]">
         <div className="flex flex-col">
           <h1 className="text-sm font-black uppercase tracking-wider text-white">
             Railway Operations Intelligence Center
@@ -77,31 +79,51 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* MAIN CONTAINER */}
-      <div className="flex-1 grid grid-cols-12 overflow-hidden min-h-0 bg-[#070b13]">
+      {/* MAIN CONTENT — explicit grid */}
+      <div className="flex-1 grid overflow-hidden" style={{ gridTemplateColumns: '1fr 400px' }}>
         
-        {/* Left Panel: Railway Map (60% width) */}
-        <main className="col-span-7 flex flex-col p-4 border-r border-railmind-border overflow-hidden relative">
-          <div className="flex-1 rounded-xl overflow-hidden border border-railmind-border/80 shadow-2xl relative">
-            <RailwayMap />
-          </div>
-        </main>
+        {/* Left: Map */}
+        <div className="map-wrapper h-full overflow-hidden">
+          <RailwayMap onTrainSelect={setSelectedTrain} />
+        </div>
 
-        {/* Right Panel: Operations Feeds (40% width) */}
-        <aside className="col-span-5 flex flex-col p-4 gap-4 overflow-y-auto max-h-full">
-          
-          {/* Active Incidents Panel (Max-height 50% to align layout) */}
-          <div className="flex-1 min-h-[260px] overflow-hidden">
+        {/* Right: Panels — must be above map */}
+        <div
+          className="flex flex-col h-full overflow-hidden border-l border-railmind-border bg-[#0d1117]"
+          style={{ position: 'relative', zIndex: 20 }}
+        >
+          {/* Selected Train Detail (compact, at top) */}
+          {selectedTrain && (
+            <div className="p-3 border-b border-railmind-border bg-[#111827] flex items-center justify-between flex-shrink-0">
+              <div>
+                <div className="text-white text-sm font-medium">
+                  {selectedTrain.name}
+                </div>
+                <div className={`text-xs ${getStatusColor(selectedTrain.status)}`}>
+                  {selectedTrain.delay_minutes > 0
+                    ? `Delayed +${selectedTrain.delay_minutes} min`
+                    : '✓ On Time'} • {selectedTrain.passengers} passengers
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedTrain(null)}
+                className="text-railmind-subtext hover:text-white text-lg leading-none cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {/* Incident panel top half */}
+          <div className="flex-1 overflow-y-auto min-h-0 border-b border-railmind-border">
             <IncidentPanel onSelectIncident={setSelectedIncident} />
           </div>
-          
-          {/* Agent Operations Feed */}
-          <div className="flex-1 min-h-[300px] overflow-hidden">
+
+          {/* Agent feed bottom half */}
+          <div className="flex-1 overflow-y-auto min-h-0">
             <AgentFeed />
           </div>
-
-        </aside>
-
+        </div>
       </div>
 
       {/* Incident Details Analysis Modal */}

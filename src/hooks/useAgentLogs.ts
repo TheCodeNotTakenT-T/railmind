@@ -32,12 +32,14 @@ export function useAgentLogs(incidentId?: string) {
 
   // Realtime Subscription
   useEffect(() => {
+    let isMounted = true;
     const channel = supabase
-      .channel("agent-logs-realtime")
+      .channel(`agent-logs-rt-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "agent_logs" },
         (payload) => {
+          if (!isMounted) return;
           const newLog = payload.new as AgentLog;
 
           // If filtering by incidentId, only add if it matches
@@ -56,14 +58,19 @@ export function useAgentLogs(incidentId?: string) {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "agent_logs" },
         (payload) => {
+          if (!isMounted) return;
           const updatedLog = payload.new as AgentLog;
           
           setLogs((prev) => prev.map((l) => (l.id === updatedLog.id ? updatedLog : l)));
         }
-      )
-      .subscribe();
+      );
+
+    Promise.resolve().then(() => {
+      if (isMounted) channel.subscribe();
+    });
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
   }, [incidentId]);

@@ -164,7 +164,7 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+      <div className="fixed bottom-6 right-6 flex items-center gap-3" style={{ zIndex: 9990 }}>
         {/* Reset Button */}
         {lastIncidentId && !isRunning && (
           <button
@@ -232,7 +232,7 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
       {/* Progress Overlay */}
       <AnimatePresence>
         {isRunning && (
-          <div className="fixed inset-0 z-[99] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm" style={{ zIndex: 9995, background: 'rgba(0,0,0,0.8)' }}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
