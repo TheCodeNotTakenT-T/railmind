@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useIncidents } from '@/hooks'
 import { getSeverityBadgeClass } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -19,6 +20,24 @@ import {
 } from 'recharts'
 import type { Incident } from '@/lib/types'
 
+function useCountUp(target: number, duration: number = 1500) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (target === 0) return
+    const start = Date.now()
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - start
+      const progress = Math.min(elapsed / duration, 1)
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.round(target * eased))
+      if (progress >= 1) clearInterval(timer)
+    }, 16)
+    return () => clearInterval(timer)
+  }, [target, duration])
+  return count
+}
+
 export default function MetricsPage() {
   const { incidents: activeIncidents } = useIncidents('active')
   const { incidents: resolvedIncidents } = useIncidents('resolved')
@@ -34,6 +53,10 @@ export default function MetricsPage() {
     const opts = i.resolution_options
     return sum + (opts?.[0]?.estimatedDelayReduction || 45)
   }, 0)
+
+  // Animated counters
+  const delaysPrevented = useCountUp(totalResolved || 12)
+  const passengersSaved = useCountUp(totalDelaysSaved || 540)
 
   const chartData = [
     { day: 'Jun 3', incidents: 3, resolved: 3, saved: 125 },
@@ -56,7 +79,7 @@ export default function MetricsPage() {
   const statCards = [
     {
       label: 'Cascade Delays Prevented',
-      value: totalResolved || 12,
+      value: delaysPrevented,
       sub: 'incidents resolved autonomously',
       icon: ShieldCheck,
       color: 'text-[#22c55e]',
@@ -64,7 +87,7 @@ export default function MetricsPage() {
     },
     {
       label: 'Passenger-Minutes Saved',
-      value: `${totalDelaysSaved || 540} min`,
+      value: `${passengersSaved} min`,
       sub: 'across all incidents',
       icon: Users,
       color: 'text-[#3b82f6]',

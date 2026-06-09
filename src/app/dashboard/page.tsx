@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import IncidentPanel from '@/components/incidents/IncidentPanel'
 import IncidentDetailModal from '@/components/incidents/IncidentDetailModal'
 import AgentFeed from '@/components/agents/AgentFeed'
@@ -16,6 +16,23 @@ const RailwayMap = dynamic(
   { ssr: false }
 )
 
+function useCountUp(target: number, duration: number = 1200) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (target === 0) { setCount(0); return }
+    const start = Date.now()
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.round(target * eased))
+      if (progress >= 1) clearInterval(timer)
+    }, 16)
+    return () => clearInterval(timer)
+  }, [target, duration])
+  return count
+}
+
 export default function DashboardPage() {
   const { trains } = useTrains()
   const { incidents: activeIncidents } = useIncidents('active')
@@ -25,6 +42,10 @@ export default function DashboardPage() {
 
   const activeCount = activeIncidents.length
   const resolvedCount = resolvedIncidents.length
+
+  const animTrains = useCountUp(trains.length)
+  const animActive = useCountUp(activeCount)
+  const animResolved = useCountUp(resolvedCount)
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#0a0e1a] text-white">
@@ -45,7 +66,7 @@ export default function DashboardPage() {
           <div className="bg-[#3b82f6]/10 border border-[#3b82f6]/20 px-3 py-1 rounded-lg flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
             <span className="text-xs text-railmind-subtext">
-              Trains Monitored: <strong className="text-white font-mono">{trains.length}</strong>
+              Trains Monitored: <strong className="text-white font-mono">{animTrains}</strong>
             </span>
           </div>
 
@@ -57,7 +78,7 @@ export default function DashboardPage() {
           }`}>
             <span className={`w-1.5 h-1.5 rounded-full ${activeCount > 0 ? 'bg-railmind-red animate-ping' : 'bg-railmind-subtext'}`} />
             <span className="text-xs text-railmind-subtext">
-              Active Delays: <strong className={`${activeCount > 0 ? 'text-railmind-red' : 'text-white'} font-mono`}>{activeCount}</strong>
+              Active Delays: <strong className={`${activeCount > 0 ? 'text-railmind-red' : 'text-white'} font-mono`}>{animActive}</strong>
             </span>
           </div>
 
@@ -65,7 +86,7 @@ export default function DashboardPage() {
           <div className="bg-railmind-green/10 border border-railmind-green/20 px-3 py-1 rounded-lg flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-railmind-green" />
             <span className="text-xs text-railmind-subtext">
-              Mitigated: <strong className="text-white font-mono">{resolvedCount}</strong>
+              Mitigated: <strong className="text-white font-mono">{animResolved}</strong>
             </span>
           </div>
 

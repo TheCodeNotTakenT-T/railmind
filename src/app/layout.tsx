@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,9 @@ export default function RootLayout({
         <main className="flex-1 min-h-screen overflow-y-auto bg-[#0a0e1a] pl-[240px]">
           {children}
         </main>
+        <Toaster richColors position="bottom-right" theme="dark" />
       </body>
     </html>
   );
 }
+

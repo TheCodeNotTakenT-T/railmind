@@ -38,8 +38,8 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
     ?? cascadeTrains.reduce((sum: number, t: any) => sum + (t.estimatedDelay || t.delayMinutes || 0), 0)
     ?? 0
   const totalDelay = cascadeData.totalCascadeMinutes
-    ?? cascadeTrains.length * 15
-    ?? 0
+    || cascadeTrains.length * 15
+    || 0
   const timeToImpact = cascadeData.timeToImpact ?? 18
   const resolutionOptions = incident.resolution_options || []
   const notifications = incident.notifications || null
@@ -54,7 +54,11 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
       })
       const data = await res.json()
       if (res.ok) {
-        toast.success(`Resolution Applied: ${data.resolution?.title || 'Applied successfully!'}`)
+        const opt = resolutionOptions[index]
+        toast.success('Resolution applied — cascade prevented', {
+          description: `Estimated ${opt?.estimatedDelayReduction || 0} minutes saved`,
+          duration: 4000,
+        })
         onClose()
       } else {
         toast.error(`Error: ${data.error || 'Failed to apply resolution'}`)
@@ -71,7 +75,7 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
   }
 
   return (
-    <Dialog open={!!incident} onOpenChange={(open) => { if (!open) onClose() }} modal={true}>
+    <Dialog open={!!incident} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="max-w-4xl bg-railmind-bg border-railmind-border p-6 rounded-2xl text-white" style={{ zIndex: 9999 }}>
         
         {/* Header */}
@@ -158,7 +162,11 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
               </div>
             ) : (
               <div className="bg-railmind-surface/30 border border-railmind-border/50 border-dashed rounded-xl p-4 text-center text-xs text-railmind-subtext">
-                {incident.status === 'resolved' ? 'No active cascade impacts' : 'Cascade analysis pending...'}
+                {incident.status === 'active' && !incident.cascade_impact
+                  ? 'Cascade analysis pending...'
+                  : incident.cascade_impact && cascadeTrains.length === 0
+                    ? 'No cascade impact detected — delay isolated'
+                    : 'Cascade analysis was not required for this incident'}
               </div>
             )}
           </div>

@@ -93,6 +93,7 @@ export default function IncidentPanel({ onSelectIncident }: IncidentPanelProps) 
                     className={`cursor-pointer hover:bg-railmind-muted/20 hover:scale-[1.01] transition-all duration-200 p-3 flex flex-col gap-2 ${getSeverityBorder(
                       incident.severity
                     )} ${isCritical ? 'animate-pulse-critical border border-railmind-red/35' : ''}`}
+                    style={{ boxShadow: isCritical ? '0 0 12px rgba(220,38,38,0.3)' : 'none' }}
                   >
                     {/* Top Row */}
                     <div className="flex justify-between items-start gap-2">
@@ -112,7 +113,7 @@ export default function IncidentPanel({ onSelectIncident }: IncidentPanelProps) 
                       </div>
                       {hasCascade && (
                         <div className="text-[11px] text-railmind-orange bg-railmind-orange/10 px-2 py-0.5 rounded border border-railmind-orange/20 mt-1">
-                          ⚠ Cascade: {incident.cascade_impact.cascadeTrains.length} trains at risk
+                          ⚠ Cascade: {incident.cascade_impact!.cascadeTrains.length} trains at risk
                         </div>
                       )}
                     </div>

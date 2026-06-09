@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -120,17 +120,29 @@ export default function RailwayMapInner({
                        train.status === 'delayed' ? 8 : 6
         
         return (
-          <CircleMarker
-            key={train.id}
-            center={[train.current_lat || 20.5937, 
-                     train.current_lng || 78.9629]}
-            radius={radius}
-            fillColor={color}
-            color="white"
-            fillOpacity={0.9}
-            weight={2}
-            className={train.status === 'critical' ? 'animate-pulse-critical' : ''}
-          >
+          <React.Fragment key={train.id}>
+            {/* Pulse ring for critical trains */}
+            {train.status === 'critical' && (
+              <CircleMarker
+                center={[train.current_lat || 20.5937,
+                         train.current_lng || 78.9629]}
+                radius={radius + 8}
+                fillColor={color}
+                color="transparent"
+                fillOpacity={0.15}
+                className="animate-pulse-critical"
+              />
+            )}
+            <CircleMarker
+              center={[train.current_lat || 20.5937, 
+                       train.current_lng || 78.9629]}
+              radius={radius}
+              fillColor={color}
+              color="white"
+              fillOpacity={0.9}
+              weight={2}
+              className={train.status === 'critical' ? 'animate-pulse-critical' : ''}
+            >
             <Popup>
               <div style={{ background: '#111827', color: '#f9fafb', 
                             padding: '8px', borderRadius: '4px', minWidth: '160px' }}>
@@ -174,6 +186,7 @@ export default function RailwayMapInner({
               </div>
             </Popup>
           </CircleMarker>
+          </React.Fragment>
         )
       })}
     </MapContainer>

@@ -88,7 +88,7 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
           setIsRunning(false)
           setLastIncidentId(incidentId)
           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-          toast.success('AI Operations analysis completed successfully!')
+          toast.success('Full pipeline complete — incident analyzed', { duration: 3000 })
           
           // Small delay before opening modal
           setTimeout(() => {
@@ -130,6 +130,7 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
       
       // Transition to detecting anomaly
       setCurrentStep(1)
+      toast.info('Delay scenario injected — agents activating', { duration: 2000 })
       
       // Step 2: Trigger Agent Pipeline asynchronously (don't await, let polling track it)
       fetch('/api/agents/analyze', {

@@ -78,6 +78,30 @@ export default function AgentFeed({ incidentId }: AgentFeedProps) {
 
       {/* Feed Area */}
       <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+        {/* Typing indicator when agents are active */}
+        <AnimatePresence>
+          {isAgentRunning && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-2 px-3 py-2 text-xs text-railmind-blue border-b border-railmind-border"
+            >
+              <span className="text-railmind-blue font-mono">AGENTS ACTIVE</span>
+              <span className="flex gap-1">
+                {[0, 1, 2].map(i => (
+                  <motion.span
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-railmind-blue"
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1.2, delay: i * 0.4, repeat: Infinity }}
+                  />
+                ))}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 className="w-5 h-5 text-railmind-blue animate-spin" />
