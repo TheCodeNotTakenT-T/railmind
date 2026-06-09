@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { sentinelAgent } from "./sentinel";
+import { cascadeAnalyzerAgent } from "./cascade-analyzer";
 
 export class Orchestrator {
   async handleIncident(incidentId: string): Promise<void> {
@@ -63,19 +64,29 @@ export class Orchestrator {
 
     console.log(`✅ Stage 1 complete: ${analysis.severity} severity — proceeding to cascade analysis`);
 
-    // Stages 2-4 will be added in phases 3.3-3.5
-    // For now update status back to active (analyzed by sentinel but waiting for cascade)
+    // STAGE 2: Cascade Analysis
+    console.log('🔗 Stage 2: Cascade Analyzer...')
+    const cascadeOutput = await cascadeAnalyzerAgent.run({
+      incidentId,
+      context: {
+        sentinelAnalysis: sentinelOutput.data?.analysis,
+        trigger_train_id: incident.trigger_train_id
+      }
+    })
+    console.log(`✅ Stage 2 complete: ${cascadeOutput.summary}`)
+
+    // Stages 3-4 still coming (Resolution + Communication)
     await supabase
-      .from("incidents")
-      .update({ status: "active" })
-      .eq("id", incidentId);
+      .from('incidents')
+      .update({ status: 'active' })
+      .eq('id', incidentId)
 
     // Log entry for orchestrator
     await supabase.from("agent_logs").insert({
       agent_name: "Orchestrator",
-      action: "Stage 1 (Sentinel) complete — waiting for next stages",
+      action: "Stage 2 (Cascade) complete — waiting for next stages",
       input: { incidentId },
-      output: { sentinelOutput, status: "active" },
+      output: { sentinelOutput, cascadeOutput, status: "active" },
       duration_ms: 0,
       incident_id: incidentId,
     });

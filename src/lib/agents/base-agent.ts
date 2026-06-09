@@ -1,5 +1,5 @@
 import { generateText, tool } from "ai";
-import { google } from "@ai-sdk/google";
+import { groq } from "@ai-sdk/groq";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { TOOL_IMPLEMENTATIONS, TOOL_SCHEMAS } from "./tools/railway-tools";
 import { AgentInput, AgentOutput } from "./types";
@@ -49,9 +49,9 @@ export abstract class BaseAgent {
         });
       }
 
-      // Call Gemini 2.0 Flash with maximum 5 tool-calling roundtrips
+      // Call Groq Llama 3.3 70B with maximum 5 tool-calling roundtrips
       const { text, toolCalls } = await generateText({
-        model: google("gemini-2.0-flash"),
+        model: groq("llama-3.3-70b-versatile"),
         system: this.systemPrompt,
         prompt: this.buildPrompt(input),
         tools,

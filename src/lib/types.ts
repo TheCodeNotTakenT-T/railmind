@@ -63,6 +63,7 @@ export interface Incident {
   delay_minutes: number;
   detected_at: string;
   resolved_at: string | null;
+  sentinel_analysis: any | null;
   cascade_impact: CascadeImpact | null;
   resolution_options: ResolutionOption[] | null;
   resolution_applied: ResolutionOption | null;

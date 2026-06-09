@@ -1,5 +1,5 @@
 import { generateText, tool } from "ai";
-import { google } from "@ai-sdk/google";
+import { groq } from "@ai-sdk/groq";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { TOOL_IMPLEMENTATIONS } from "./tools/railway-tools";
@@ -146,9 +146,9 @@ Then output your severity assessment as a JSON object.
         }),
       };
 
-      // Call Gemini 2.0 Flash
-      const { text } = await generateText({
-        model: google("gemini-2.0-flash-exp"),
+      // STEP 1 — Tool gathering (collect data using tools):
+      const { steps } = await generateText({
+        model: groq('llama-3.3-70b-versatile'),
         system: SENTINEL_SYSTEM_PROMPT,
         prompt: userPrompt,
         tools,
@@ -156,9 +156,23 @@ Then output your severity assessment as a JSON object.
         temperature: 0.2,
       });
 
+      // Extract all tool results from steps
+      const toolResultsSummary = steps
+        .flatMap(step => step.toolResults || [])
+        .map(tr => `Tool: ${tr.toolName}\nResult: ${JSON.stringify(tr.result)}`)
+        .join('\n\n');
+
+      // STEP 2 — Structured output (no tools, just JSON):
+      const { text: jsonText } = await generateText({
+        model: groq('llama-3.3-70b-versatile'),
+        system: 'You output ONLY valid JSON. No markdown. No explanation. Just the JSON object.',
+        prompt: `Based on this railway data:\n\n${toolResultsSummary}\n\nTrain ${trainId} is delayed ${delayMinutes} minutes.\n\nOutput this exact JSON:\n{"severity":"critical|high|medium|low","reasoning":"specific 2-3 sentences mentioning train name, station, and impact","estimatedCascadeTrains":NUMBER,"timeToImpact":NUMBER,"recommendAnalysis":true|false,"affectedStation":"STATION_CODE","trainName":"TRAIN_NAME"}`,
+        temperature: 0.1,
+      });
+
       // Parse JSON from response
       // Strip any markdown code blocks if present
-      const cleanText = text
+      const cleanText = jsonText
         .replace(/```json\n?/g, "")
         .replace(/```\n?/g, "")
         .trim();
@@ -184,7 +198,7 @@ Then output your severity assessment as a JSON object.
       const { error: updateIncidentError } = await supabase
         .from("incidents")
         .update({
-          cascade_impact: { sentinel_analysis: analysis },
+          sentinel_analysis: analysis as any,
           severity: analysis.severity,
         })
         .eq("id", input.incidentId);

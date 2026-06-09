@@ -36,13 +36,13 @@ async function testSentinel() {
 
   const { data: incident1 } = await supabase
     .from("incidents")
-    .select("severity, cascade_impact")
+    .select("severity, sentinel_analysis")
     .eq("id", id1)
     .single();
 
   console.log("\n📊 Sentinel Analysis stored in DB:");
   console.log("Severity:", incident1?.severity);
-  console.log("Analysis:", JSON.stringify(incident1?.cascade_impact, null, 2));
+  console.log("Analysis:", JSON.stringify(incident1?.sentinel_analysis, null, 2));
   console.log("\n" + "─".repeat(50) + "\n");
 
   // TEST CASE 2: Low — small delay on express
@@ -68,13 +68,13 @@ async function testSentinel() {
 
   const { data: incident2 } = await supabase
     .from("incidents")
-    .select("severity, cascade_impact, status")
+    .select("severity, sentinel_analysis, status")
     .eq("id", id2)
     .single();
 
   console.log("Severity:", incident2?.severity);
   console.log("Status (should be resolved for LOW):", incident2?.status);
-  console.log("Analysis:", JSON.stringify(incident2?.cascade_impact, null, 2));
+  console.log("Analysis:", JSON.stringify(incident2?.sentinel_analysis, null, 2));
 }
 
 testSentinel().catch(console.error);
