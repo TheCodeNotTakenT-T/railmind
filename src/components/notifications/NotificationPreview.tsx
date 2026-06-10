@@ -4,7 +4,7 @@ import React from 'react'
 import { useIncidents } from '@/hooks'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
-import { MessageSquare, Checklist, ShieldAlert, MailCheck } from 'lucide-react'
+import { MessageSquare, ClipboardCheck, ShieldAlert, MailCheck } from 'lucide-react'
 
 export default function NotificationPreview() {
   const { incidents } = useIncidents('active')

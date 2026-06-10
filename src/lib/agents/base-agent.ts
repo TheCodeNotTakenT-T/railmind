@@ -46,7 +46,7 @@ export abstract class BaseAgent {
             if (!impl) return { error: "Tool not found" };
             return await impl(params);
           },
-        });
+        } as any);
       }
 
       // Call Groq Llama 3.3 70B with maximum 5 tool-calling roundtrips
@@ -57,7 +57,7 @@ export abstract class BaseAgent {
         tools,
         maxSteps: 5,
         temperature: 0.3,
-      });
+      } as any);
 
       const duration = Date.now() - startTime;
       const output: AgentOutput = {

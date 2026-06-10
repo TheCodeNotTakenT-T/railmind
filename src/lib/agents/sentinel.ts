@@ -120,30 +120,30 @@ Then output your severity assessment as a JSON object.
         get_train_status: tool({
           description: "Get current status and position of a train by its ID",
           parameters: z.object({ train_id: z.string() }),
-          execute: async ({ train_id }) => {
+          execute: async ({ train_id }: any) => {
             return await TOOL_IMPLEMENTATIONS.get_train_status({ train_id });
           },
-        }),
+        } as any),
         get_station_schedule: tool({
           description: "Get trains currently at or approaching a station within a time window",
           parameters: z.object({
             station_code: z.string(),
             time_window_minutes: z.number(),
           }),
-          execute: async ({ station_code, time_window_minutes }) => {
+          execute: async ({ station_code, time_window_minutes }: any) => {
             return await TOOL_IMPLEMENTATIONS.get_station_schedule({
               station_code,
               time_window_minutes,
             });
           },
-        }),
+        } as any),
         get_track_occupancy: tool({
           description: "Get the number of trains currently approaching or on a track section near a station",
           parameters: z.object({ station_code: z.string() }),
-          execute: async ({ station_code }) => {
+          execute: async ({ station_code }: any) => {
             return await TOOL_IMPLEMENTATIONS.get_track_occupancy({ station_code });
           },
-        }),
+        } as any),
       };
 
       // STEP 1 — Tool gathering (collect data using tools):
@@ -154,12 +154,12 @@ Then output your severity assessment as a JSON object.
         tools,
         maxSteps: 4,
         temperature: 0.2,
-      });
+      } as any);
 
       // Extract all tool results from steps
       const toolResultsSummary = steps
-        .flatMap(step => step.toolResults || [])
-        .map(tr => `Tool: ${tr.toolName}\nResult: ${JSON.stringify(tr.result)}`)
+        .flatMap(step => (step as any).toolResults || [])
+        .map((tr: any) => `Tool: ${tr.toolName}\nResult: ${JSON.stringify(tr.result)}`)
         .join('\n\n');
 
       // STEP 2 — Structured output (no tools, just JSON):

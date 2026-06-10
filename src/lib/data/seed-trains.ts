@@ -94,10 +94,45 @@ const RAW_SEED_TRAINS = [
   { id: "11057", name: "Amritsar Express", number: "11057", route: corridor5Route, passengers: 940 }
 ];
 
+const STATION_COORDS: Record<string, { lat: number; lng: number }> = {
+  NDLS: { lat: 28.6415, lng: 77.2210 },
+  NZM: { lat: 28.5888, lng: 77.2536 },
+  MTJ: { lat: 27.4925, lng: 77.6744 },
+  GWL: { lat: 26.2155, lng: 78.1878 },
+  JHS: { lat: 25.4484, lng: 78.5562 },
+  BPL: { lat: 23.2684, lng: 77.4106 },
+  ET: { lat: 22.6144, lng: 77.7850 },
+  KOTA: { lat: 25.2195, lng: 75.8647 },
+  RTM: { lat: 23.3516, lng: 75.0353 },
+  BRC: { lat: 22.3116, lng: 73.1812 },
+  ST: { lat: 21.2046, lng: 72.8406 },
+  BCT: { lat: 18.9696, lng: 72.8193 },
+  CNB: { lat: 26.4536, lng: 80.3514 },
+  ALD: { lat: 25.4448, lng: 81.8432 },
+  DDU: { lat: 25.2818, lng: 83.1232 },
+  PNBE: { lat: 25.6022, lng: 85.1376 },
+  DHN: { lat: 23.7924, lng: 86.4276 },
+  HWH: { lat: 22.5836, lng: 88.3424 },
+  AGC: { lat: 27.1578, lng: 77.9906 },
+  NGP: { lat: 21.1524, lng: 79.0882 },
+  SC: { lat: 17.4344, lng: 78.5016 },
+  MAS: { lat: 13.0827, lng: 80.2707 },
+  CSTM: { lat: 18.9400, lng: 72.8354 },
+  PUNE: { lat: 18.5289, lng: 73.8744 },
+  SUR: { lat: 17.6599, lng: 75.9064 },
+  GTL: { lat: 15.1664, lng: 77.3712 },
+  SBC: { lat: 12.9781, lng: 77.5697 },
+  UMB: { lat: 30.3414, lng: 76.8378 },
+  LDH: { lat: 30.9025, lng: 75.8486 },
+  ASR: { lat: 31.6340, lng: 74.8723 },
+};
+
 export const SEED_TRAINS: Train[] = RAW_SEED_TRAINS.map((train, index) => {
   const currentStationIndex = getRandomStationIndex(train.route.length);
   const origin = train.route[0];
   const destination = train.route[train.route.length - 1];
+  const currentStation = train.route[currentStationIndex];
+  const coords = STATION_COORDS[currentStation] || { lat: 20.5937, lng: 78.9629 };
   
   return {
     id: train.id,
@@ -106,6 +141,8 @@ export const SEED_TRAINS: Train[] = RAW_SEED_TRAINS.map((train, index) => {
     origin,
     destination,
     route: train.route,
+    current_lat: coords.lat,
+    current_lng: coords.lng,
     current_station_index: currentStationIndex,
     scheduled_arrival: getScheduledTime(index),
     actual_arrival: null,

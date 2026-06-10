@@ -103,33 +103,33 @@ export class CascadeAnalyzerAgent {
             station_code: z.string(),
             time_window_minutes: z.number()
           }),
-          execute: async (params) => 
+          execute: async (params: any) => 
             await TOOL_IMPLEMENTATIONS.get_station_schedule(params)
-        }),
+        } as any),
         get_track_occupancy: tool({
           description: 'Get number of trains approaching a station',
           parameters: z.object({ station_code: z.string() }),
-          execute: async (params) => 
+          execute: async (params: any) => 
             await TOOL_IMPLEMENTATIONS.get_track_occupancy(params)
-        }),
+        } as any),
         get_passenger_count: tool({
           description: 'Get passenger count for a train',
           parameters: z.object({ train_id: z.string() }),
-          execute: async (params) => 
+          execute: async (params: any) => 
             await TOOL_IMPLEMENTATIONS.get_passenger_count(params)
-        }),
+        } as any),
         get_crew_assignments: tool({
           description: 'Get crew assignment details for a train',
           parameters: z.object({ train_id: z.string() }),
-          execute: async (params) => 
+          execute: async (params: any) => 
             await TOOL_IMPLEMENTATIONS.get_crew_assignments(params)
-        }),
+        } as any),
         get_available_platforms: tool({
           description: 'Get available platform count at a station',
           parameters: z.object({ station_code: z.string() }),
-          execute: async (params) => 
+          execute: async (params: any) => 
             await TOOL_IMPLEMENTATIONS.get_available_platforms(params)
-        }),
+        } as any),
       }
 
       const userPrompt = `
@@ -157,11 +157,11 @@ Then calculate the full cascade impact.
         tools,
         maxSteps: 6,
         temperature: 0.2,
-      })
+      } as any)
 
       const toolResultsSummary = steps
-        .flatMap(step => step.toolResults || [])
-        .map(tr => `${tr.toolName}: ${JSON.stringify(tr.result)}`)
+        .flatMap(step => (step as any).toolResults || [])
+        .map((tr: any) => `${tr.toolName}: ${JSON.stringify(tr.result)}`)
         .join('\n')
 
       // STEP 2: Structured JSON output
@@ -277,13 +277,16 @@ Then calculate the full cascade impact.
 
       // Store fallback data
       const existingImpact = fallbackIncident?.cascade_impact || {}
-      await supabase
-        .from('incidents')
-        .update({
-          cascade_impact: { ...existingImpact, ...fallbackReport }
-        })
-        .eq('id', input.incidentId)
-        .catch(() => {}) // ignore update errors in fallback
+      try {
+        await supabase
+          .from('incidents')
+          .update({
+            cascade_impact: { ...existingImpact, ...fallbackReport }
+          })
+          .eq('id', input.incidentId)
+      } catch (err) {
+        // ignore update errors in fallback
+      }
 
       const duration = Date.now() - startTime
       const fallbackOutput: AgentOutput = {
@@ -293,11 +296,15 @@ Then calculate the full cascade impact.
       }
 
       if (logEntry?.id) {
-        await supabase.from('agent_logs').update({
-          action: `Cascade (fallback): 3 trains, ${fallbackReport.passengersAffected} passengers`,
-          output: fallbackOutput as any,
-          duration_ms: duration
-        }).eq('id', logEntry.id).catch(() => {})
+        try {
+          await supabase.from('agent_logs').update({
+            action: `Cascade (fallback): 3 trains, ${fallbackReport.passengersAffected} passengers`,
+            output: fallbackOutput as any,
+            duration_ms: duration
+          }).eq('id', logEntry.id)
+        } catch (err) {
+          // ignore log update errors in fallback
+        }
       }
 
       console.log('⚠️ CascadeAnalyzer used fallback data')
