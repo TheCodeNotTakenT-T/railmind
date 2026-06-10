@@ -5,13 +5,13 @@
 [![Built for FAR AWAY 2026](https://img.shields.io/badge/FAR%20AWAY-2026-navy?style=for-the-badge)](https://faraway.zuup.org)
 [![Theme](https://img.shields.io/badge/Theme-Railways%20+%20Agentic%20AI-orange?style=for-the-badge)]()
 
-> *"Japan's Shinkansen achieves 99.9% on-time performance. Indian Railways averages 65%. The gap isn't infrastructure — it's intelligence. RailMind brings that intelligence to India."*
+> *"Japan's Shinkansen achieves 99.9% on-time performance. Indian Railways averages 65%. The gap isn't infrastructure  it's intelligence. RailMind brings that intelligence to India."*
 
 ---
 
 ## The Problem
 
-India's railways carry **23 million passengers daily** across 68,000 route kilometres. When a single train is delayed, it doesn't just affect its own passengers — it triggers a **cascade**: platform conflicts force the next train to wait, crew crossovers fail because the same crew was scheduled for two trains, and passengers miss connections across multiple services.
+India's railways carry **23 million passengers daily** across 68,000 route kilometres. When a single train is delayed, it doesn't just affect its own passengers  it triggers a **cascade**: platform conflicts force the next train to wait, crew crossovers fail because the same crew was scheduled for two trains, and passengers miss connections across multiple services.
 
 This cascade is managed today with **phone calls, paper records, and software from the 1990s.**
 
@@ -26,7 +26,7 @@ A 20-minute primary delay becomes a 2-hour cascade affecting 10–20 trains and 
 RailMind is a **multi-agent AI system** that:
 
 1. **Monitors** 50 trains across 5 major Indian railway corridors in real-time
-2. **Detects** when a delay will cascade — 15–30 minutes before it becomes unrecoverable
+2. **Detects** when a delay will cascade  15–30 minutes before it becomes unrecoverable
 3. **Analyzes** the full downstream impact: which trains, which passengers, which crew crossovers
 4. **Generates** 3 concrete resolution options with specific platform numbers, hold times, and rerouting
 5. **Drafts** targeted communications for passengers (SMS), station masters (operational brief), and crew (schedule alert)
@@ -41,7 +41,7 @@ RailMind is a **multi-agent AI system** that:
 
 **To see the full system in action:**
 1. Open the dashboard
-2. Click **"Run Demo Scenario"** → Select **"Howrah Rajdhani — Patna Cascade"**
+2. Click **"Run Demo Scenario"** → Select **"Howrah Rajdhani  Patna Cascade"**
 3. Watch 4 AI agents activate in sequence in the Agent Feed
 4. Click the new incident card → see cascade graph, resolution options, and generated SMS
 
@@ -54,7 +54,7 @@ RailMind is a **multi-agent AI system** that:
 ```
 POST /api/agents/analyze
         ↓
-[Orchestrator] — sequences all agents, handles failures gracefully
+[Orchestrator]  sequences all agents, handles failures gracefully
         ↓
 [Sentinel Agent]
   → Analyzes delay severity using real train + station data
@@ -76,7 +76,7 @@ POST /api/agents/analyze
 
 ### Agent Sample Output (Real, Not Fabricated)
 
-**Sentinel:** `"HIGH severity — Howrah Rajdhani Express running 25 min late at DDU junction. Cascade risk to 3 connecting services within 18 minutes."`
+**Sentinel:** `"HIGH severity  Howrah Rajdhani Express running 25 min late at DDU junction. Cascade risk to 3 connecting services within 18 minutes."`
 
 **Cascade:** `"Sealdah Rajdhani: +15 min (platform conflict), Poorva Express: +10 min (crew crossover), Jharkhand Swarna Jayanti: +8 min (track blocking)"`
 
@@ -90,17 +90,17 @@ POST /api/agents/analyze
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    SIMULATION LAYER                          │
+│                    SIMULATION LAYER                         │
 │  SimulationEngine → 50 trains across 5 corridors            │
-│  Injects realistic delay scenarios for demo                  │
+│  Injects realistic delay scenarios for demo                 │
 └────────────────────────┬────────────────────────────────────┘
                          │ writes every 5 seconds
                          ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    SUPABASE (PostgreSQL)                     │
+│                    SUPABASE (PostgreSQL)                    │
 │  Tables: trains, stations, incidents, agent_logs,           │
-│          notifications                                       │
-│  Realtime: trains, incidents, agent_logs (live subscriptions)│
+│          notifications                                      │
+│ Realtime: trains, incidents, agent_logs (live subscriptions)│
 └────────────────────────┬────────────────────────────────────┘
                          │ realtime subscriptions
           ┌──────────────┼──────────────┐
@@ -112,11 +112,11 @@ POST /api/agents/analyze
                          │
                          ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                    NEXT.JS DASHBOARD                         │
-│                                                              │
+│                    NEXT.JS DASHBOARD                        │
+│                                                             │
 │  [Railway Map]  [Incident Panel]  [Agent Feed]  [Modals]    │
 │  react-leaflet   active incidents  live AI logs  cascade +  │
-│  50 live trains  severity sorted   color-coded   resolution  │
+│  50 live trains  severity sorted   color-coded   resolution │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -168,7 +168,7 @@ npm install
 Create `.env.local`:
 
 ```env
-# Groq AI API (free tier — get from console.groq.com)
+# Groq AI API (free tier  get from console.groq.com)
 GROQ_API_KEY=gsk_your_key_here
 
 # Supabase Project (get from supabase.com dashboard)
@@ -269,7 +269,7 @@ See [`/docs/agent-specs.md`](docs/agent-specs.md) for full agent specifications 
 - Operate in a defined sequence with failure isolation
 - Generate outputs that real railway operators could act on immediately
 
-**The cascade graph** (visible when opening any analyzed incident) is not decorative — it represents real computational reasoning about which trains will be delayed, why, and in what order.
+**The cascade graph** (visible when opening any analyzed incident) is not decorative  it represents real computational reasoning about which trains will be delayed, why, and in what order.
 
 **The 8-second pipeline** is from production data. Run the demo yourself.
 
@@ -277,9 +277,9 @@ See [`/docs/agent-specs.md`](docs/agent-specs.md) for full agent specifications 
 
 ## Built For
 
-**FAR AWAY 2026** — India's Biggest International Hackathon  
+**FAR AWAY 2026**  India's Biggest International Hackathon  
 **Theme:** Railways + Agentic & Autonomous Systems  
-**Team:** TheCodeNotTakenT-T  
+**Team:**  👉👈
 **Round 1 Submission**
 
 ---
