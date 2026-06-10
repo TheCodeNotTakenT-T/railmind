@@ -1,11 +1,10 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Polyline, CircleMarker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Polyline, CircleMarker } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTrains } from '@/hooks/useTrains'
-import { useIncidents } from '@/hooks/useIncidents'
 import type { Train } from '@/lib/types'
 
 // Fix Leaflet default icon issue (required in Next.js)
@@ -32,7 +31,6 @@ export default function RailwayMapInner({
   onTrainSelect?: (train: Train) => void 
 }) {
   const { trains } = useTrains()
-  const { incidents } = useIncidents()
   const [stations, setStations] = useState<any[]>([])
   const [railLines, setRailLines] = useState<any[]>([])
 
@@ -54,9 +52,7 @@ export default function RailwayMapInner({
       .catch(console.error)
   }, [])
 
-  // Determine if a train has an active incident
-  const getTrainIncident = (trainId: string) => 
-    incidents.find(i => i.trigger_train_id === trainId && i.status === 'active')
+
 
   return (
     <MapContainer
@@ -98,24 +94,11 @@ export default function RailwayMapInner({
           fillOpacity={0.8}
           weight={1}
           bubblingMouseEvents={false}
-        >
-          <Popup autoPan={false}>
-            <div style={{ background: '#111827', color: '#f9fafb', 
-                          padding: '8px', borderRadius: '4px', minWidth: '120px' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '13px' }}>
-                {station.name}
-              </div>
-              <div style={{ color: '#9ca3af', fontSize: '11px' }}>
-                Code: {station.code} • {station.platforms} platforms
-              </div>
-            </div>
-          </Popup>
-        </CircleMarker>
+        />
       ))}
 
       {/* Train markers */}
       {trains.map((train: Train) => {
-        const incident = getTrainIncident(train.id)
         const color = STATUS_COLORS[train.status] || '#22c55e'
         const radius = train.status === 'critical' ? 10 : 
                        train.status === 'delayed' ? 8 : 6
@@ -135,12 +118,14 @@ export default function RailwayMapInner({
                 bubblingMouseEvents={false}
                 eventHandlers={{
                   click: (e) => {
-                    e.originalEvent.stopPropagation()
+                    L.DomEvent.stopPropagation(e)
+                    if (onTrainSelect) onTrainSelect(train)
                   }
                 }}
               />
             )}
             <CircleMarker
+              key={train.id}
               center={[train.current_lat || 20.5937, 
                        train.current_lng || 78.9629]}
               radius={radius}
@@ -152,53 +137,11 @@ export default function RailwayMapInner({
               bubblingMouseEvents={false}
               eventHandlers={{
                 click: (e) => {
-                  e.originalEvent.stopPropagation()
+                  L.DomEvent.stopPropagation(e)
+                  if (onTrainSelect) onTrainSelect(train)
                 }
               }}
-            >
-            <Popup autoPan={false}>
-              <div style={{ background: '#111827', color: '#f9fafb', 
-                            padding: '8px', borderRadius: '4px', minWidth: '160px' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '13px', 
-                              marginBottom: '4px' }}>
-                  {train.name}
-                </div>
-                <div style={{ color: '#9ca3af', fontSize: '11px' }}>
-                  #{train.number}
-                </div>
-                <div style={{ 
-                  color: train.delay_minutes > 0 ? '#dc2626' : '#22c55e',
-                  fontSize: '12px', marginTop: '4px', fontWeight: 'bold'
-                }}>
-                  {train.delay_minutes > 0 
-                    ? `Delayed +${train.delay_minutes} min` 
-                    : '✓ On Time'}
-                </div>
-                <div style={{ color: '#9ca3af', fontSize: '11px' }}>
-                  {train.passengers} passengers
-                </div>
-                {incident && (
-                  <div style={{ color: '#dc2626', fontSize: '11px', 
-                                marginTop: '4px' }}>
-                    ⚠ Active incident
-                  </div>
-                )}
-                {onTrainSelect && (
-                  <button
-                    onClick={() => onTrainSelect(train)}
-                    style={{ 
-                      marginTop: '6px', padding: '3px 8px',
-                      background: '#dc2626', color: 'white',
-                      border: 'none', borderRadius: '4px',
-                      cursor: 'pointer', fontSize: '11px', width: '100%'
-                    }}
-                  >
-                    View Details
-                  </button>
-                )}
-              </div>
-            </Popup>
-          </CircleMarker>
+            />
           </React.Fragment>
         )
       })}

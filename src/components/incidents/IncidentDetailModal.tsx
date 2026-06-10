@@ -125,38 +125,43 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
                     : 'This incident has not been analyzed yet.'}
                 </p>
                 {incident.status !== 'resolved' && (
-                  <button
-                    onClick={async () => {
-                      setIsAnalyzing(true)
-                      try {
-                        await fetch('/api/agents/analyze', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ incidentId: incident.id })
-                        })
-                        // Refresh incident data after 3 seconds
-                        setTimeout(() => window.location.reload(), 3000)
-                      } catch (err) {
-                        console.error('Analysis failed:', err)
-                      } finally {
-                        setIsAnalyzing(false)
-                      }
-                    }}
-                    disabled={isAnalyzing}
-                    className="px-4 py-2 bg-railmind-red text-white rounded-lg 
-                               text-sm font-medium hover:bg-red-700 transition-colors
-                               disabled:opacity-50 disabled:cursor-not-allowed flex 
-                               items-center gap-2 cursor-pointer"
-                  >
-                    {isAnalyzing ? (
-                      <>
-                        <span className="animate-spin">⟳</span>
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>⚡ Run Analysis Now</>
-                    )}
-                  </button>
+                  <>
+                    <button
+                      onClick={async () => {
+                        setIsAnalyzing(true)
+                        try {
+                          await fetch('/api/agents/analyze', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ incidentId: incident.id })
+                          })
+                          // Refresh incident data after 3 seconds
+                          setTimeout(() => window.location.reload(), 3000)
+                        } catch (err) {
+                          console.error('Analysis failed:', err)
+                        } finally {
+                          setIsAnalyzing(false)
+                        }
+                      }}
+                      disabled={isAnalyzing}
+                      className="px-4 py-2 bg-railmind-red text-white rounded-lg 
+                                 text-sm font-medium hover:bg-red-700 transition-colors
+                                 disabled:opacity-50 disabled:cursor-not-allowed flex 
+                                 items-center gap-2 cursor-pointer"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <span className="animate-spin">⟳</span>
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>⚡ Re-run Agent Pipeline</>
+                      )}
+                    </button>
+                    <p className="text-xs text-railmind-subtext mt-1">
+                      Note: Re-analysis may reclassify severity and auto-resolve low-risk incidents
+                    </p>
+                  </>
                 )}
               </div>
             ) : cascadeTrains.length === 0 ? (

@@ -26,6 +26,58 @@ interface TrainState {
   updated_at: string;
 }
 
+const STATION_COORDS: Record<string, { lat: number, lng: number }> = {
+  'NDLS': { lat: 28.6429, lng: 77.2195 },
+  'NZM': { lat: 28.5874, lng: 77.2509 },
+  'MTJ': { lat: 27.4924, lng: 77.6737 },
+  'AGC': { lat: 27.1592, lng: 77.9800 },
+  'GWL': { lat: 26.2183, lng: 78.1828 },
+  'JHS': { lat: 25.4484, lng: 78.5685 },
+  'BPL': { lat: 23.2599, lng: 77.4126 },
+  'ET': { lat: 22.6152, lng: 77.7647 },
+  'KOTA': { lat: 25.1799, lng: 75.8304 },
+  'RTM': { lat: 23.3341, lng: 75.0376 },
+  'BRC': { lat: 22.3144, lng: 73.1843 },
+  'ST': { lat: 21.2066, lng: 72.8311 },
+  'BCT': { lat: 18.9690, lng: 72.8193 },
+  'CSTM': { lat: 18.9400, lng: 72.8353 },
+  'LTT': { lat: 19.0760, lng: 72.9090 },
+  'KYN': { lat: 19.2437, lng: 73.1355 },
+  'IGP': { lat: 19.7000, lng: 73.5667 },
+  'PUNE': { lat: 18.5286, lng: 73.8741 },
+  'SUR': { lat: 17.6805, lng: 75.9064 },
+  'NGP': { lat: 21.1461, lng: 79.0810 },
+  'CNB': { lat: 26.4543, lng: 80.3484 },
+  'LKO': { lat: 26.8467, lng: 80.9462 },
+  'ALD': { lat: 25.4358, lng: 81.8463 },
+  'BSB': { lat: 25.3176, lng: 82.9739 },
+  'DDU': { lat: 25.2786, lng: 83.1100 },
+  'PNBE': { lat: 25.5942, lng: 85.1376 },
+  'DHN': { lat: 23.7957, lng: 86.4304 },
+  'HWH': { lat: 22.5831, lng: 88.3420 },
+  'MAS': { lat: 13.0827, lng: 80.2707 },
+  'SBC': { lat: 12.9767, lng: 77.5713 },
+  'SC': { lat: 17.4355, lng: 78.5036 },
+  'GTL': { lat: 15.1670, lng: 77.3630 },
+  'ADI': { lat: 23.0258, lng: 72.6032 },
+  'JP': { lat: 26.9158, lng: 75.7876 },
+  'ASR': { lat: 31.6340, lng: 74.8723 },
+  'LDH': { lat: 30.8743, lng: 75.8573 },
+  'UMB': { lat: 30.3753, lng: 76.7821 },
+  'CDG': { lat: 30.7333, lng: 76.7794 },
+  'UDZ': { lat: 24.5854, lng: 73.7125 },
+  'JU': { lat: 26.2389, lng: 73.0243 },
+  'BBS': { lat: 20.2961, lng: 85.8189 },
+  'VSKP': { lat: 17.6868, lng: 83.2185 },
+  'BZA': { lat: 16.5167, lng: 80.6167 },
+  'GKP': { lat: 26.7606, lng: 83.3732 },
+  'GHY': { lat: 26.1842, lng: 91.7452 },
+  'TVC': { lat: 8.4883, lng: 76.9523 },
+  'ERS': { lat: 9.9816, lng: 76.2999 },
+  'CBE': { lat: 11.0168, lng: 76.9558 },
+  'MDU': { lat: 9.9193, lng: 78.1193 }
+};
+
 export class SimulationEngine {
   private interval: ReturnType<typeof setInterval> | null = null;
   private trainStates: Map<string, TrainState> = new Map();
@@ -35,30 +87,9 @@ export class SimulationEngine {
   private async initialize() {
     if (this.initialized) return;
 
-    // 1. Load station coordinates
-    let stationsData: any[] = []
-    try {
-      const fs = await import('fs')
-      const path = await import('path')
-      const filePath = path.join(process.cwd(), 'public/data/stations.json')
-      if (fs.existsSync(filePath)) {
-        stationsData = JSON.parse(fs.readFileSync(filePath, 'utf8'))
-      }
-    } catch {
-      // In production/edge, stations loaded elsewhere
-      stationsData = []
-    }
-
-    try {
-      for (const station of stationsData) {
-        this.stationCoords.set(station.code, {
-          code: station.code,
-          lat: station.lat,
-          lng: station.lng,
-        });
-      }
-    } catch (err) {
-      console.error("Failed to parse station coordinates in simulation engine:", err);
+    // Load station coordinates from hardcoded map (works in all environments)
+    for (const [code, coords] of Object.entries(STATION_COORDS)) {
+      this.stationCoords.set(code, { code, ...coords })
     }
 
     // 2. Load all trains from Supabase
