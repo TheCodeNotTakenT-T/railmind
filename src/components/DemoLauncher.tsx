@@ -115,6 +115,16 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
     setCurrentStep(0)
     
     try {
+      // Reset simulation to clean state before demo
+      try {
+        await fetch('/api/simulation/reset', { method: 'POST' })
+      } catch {
+        // ignore reset errors
+      }
+      
+      // Small delay to let reset complete
+      await new Promise(r => setTimeout(r, 500))
+
       // Step 1: Inject Scenario
       const injectRes = await fetch('/api/simulation/inject', {
         method: 'POST',

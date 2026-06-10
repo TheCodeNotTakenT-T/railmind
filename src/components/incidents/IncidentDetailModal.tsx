@@ -25,6 +25,7 @@ interface IncidentDetailModalProps {
 export default function IncidentDetailModal({ incident, onClose }: IncidentDetailModalProps) {
   const { trains } = useTrains()
   const [applyingIndex, setApplyingIndex] = useState<number | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   if (!incident) return null
 
@@ -116,7 +117,53 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
               Cascade Analysis
             </h2>
             
-            {cascadeTrains.length > 0 ? (
+            {!incident.cascade_impact || !incident.cascade_impact.cascadeTrains ? (
+              <div className="flex flex-col items-center gap-3 py-6">
+                <p className="text-railmind-subtext text-sm">
+                  {incident.status === 'resolved' 
+                    ? 'Cascade analysis was not required for this incident.'
+                    : 'This incident has not been analyzed yet.'}
+                </p>
+                {incident.status !== 'resolved' && (
+                  <button
+                    onClick={async () => {
+                      setIsAnalyzing(true)
+                      try {
+                        await fetch('/api/agents/analyze', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ incidentId: incident.id })
+                        })
+                        // Refresh incident data after 3 seconds
+                        setTimeout(() => window.location.reload(), 3000)
+                      } catch (err) {
+                        console.error('Analysis failed:', err)
+                      } finally {
+                        setIsAnalyzing(false)
+                      }
+                    }}
+                    disabled={isAnalyzing}
+                    className="px-4 py-2 bg-railmind-red text-white rounded-lg 
+                               text-sm font-medium hover:bg-red-700 transition-colors
+                               disabled:opacity-50 disabled:cursor-not-allowed flex 
+                               items-center gap-2 cursor-pointer"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <span className="animate-spin">⟳</span>
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>⚡ Run Analysis Now</>
+                    )}
+                  </button>
+                )}
+              </div>
+            ) : cascadeTrains.length === 0 ? (
+              <div className="bg-railmind-surface/30 border border-railmind-border/50 border-dashed rounded-xl p-4 text-center text-xs text-railmind-subtext">
+                No cascade impact detected — delay isolated
+              </div>
+            ) : (
               <div className="bg-railmind-surface/60 border border-railmind-border rounded-xl p-4">
                 {/* Cascade Graph Visualization */}
                 <div className="mb-4">
@@ -159,14 +206,6 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
                   <span>Total Cascade Delay: <strong className="text-white">{totalDelay} min</strong></span>
                   <span>Impact Horizon: <strong className="text-white">{timeToImpact} min</strong></span>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-railmind-surface/30 border border-railmind-border/50 border-dashed rounded-xl p-4 text-center text-xs text-railmind-subtext">
-                {incident.status === 'active' && !incident.cascade_impact
-                  ? 'Cascade analysis pending...'
-                  : incident.cascade_impact && cascadeTrains.length === 0
-                    ? 'No cascade impact detected — delay isolated'
-                    : 'Cascade analysis was not required for this incident'}
               </div>
             )}
           </div>

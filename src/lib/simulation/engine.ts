@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { SEED_TRAINS } from "@/lib/data/seed-trains";
 import type { Train } from "@/lib/types";
@@ -38,11 +36,21 @@ export class SimulationEngine {
     if (this.initialized) return;
 
     // 1. Load station coordinates
+    let stationsData: any[] = []
     try {
-      const stationsPath = path.join(process.cwd(), "public/data/stations.json");
-      const stationsRaw = fs.readFileSync(stationsPath, "utf8");
-      const stations = JSON.parse(stationsRaw);
-      for (const station of stations) {
+      const fs = await import('fs')
+      const path = await import('path')
+      const filePath = path.join(process.cwd(), 'public/data/stations.json')
+      if (fs.existsSync(filePath)) {
+        stationsData = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+      }
+    } catch {
+      // In production/edge, stations loaded elsewhere
+      stationsData = []
+    }
+
+    try {
+      for (const station of stationsData) {
         this.stationCoords.set(station.code, {
           code: station.code,
           lat: station.lat,
@@ -50,7 +58,7 @@ export class SimulationEngine {
         });
       }
     } catch (err) {
-      console.error("Failed to load station coordinates in simulation engine:", err);
+      console.error("Failed to parse station coordinates in simulation engine:", err);
     }
 
     // 2. Load all trains from Supabase

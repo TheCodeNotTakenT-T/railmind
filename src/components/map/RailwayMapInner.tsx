@@ -97,8 +97,9 @@ export default function RailwayMapInner({
           color="#475569"
           fillOpacity={0.8}
           weight={1}
+          bubblingMouseEvents={false}
         >
-          <Popup>
+          <Popup autoPan={false}>
             <div style={{ background: '#111827', color: '#f9fafb', 
                           padding: '8px', borderRadius: '4px', minWidth: '120px' }}>
               <div style={{ fontWeight: 'bold', fontSize: '13px' }}>
@@ -131,6 +132,12 @@ export default function RailwayMapInner({
                 color="transparent"
                 fillOpacity={0.15}
                 className="animate-pulse-critical"
+                bubblingMouseEvents={false}
+                eventHandlers={{
+                  click: (e) => {
+                    e.originalEvent.stopPropagation()
+                  }
+                }}
               />
             )}
             <CircleMarker
@@ -142,8 +149,14 @@ export default function RailwayMapInner({
               fillOpacity={0.9}
               weight={2}
               className={train.status === 'critical' ? 'animate-pulse-critical' : ''}
+              bubblingMouseEvents={false}
+              eventHandlers={{
+                click: (e) => {
+                  e.originalEvent.stopPropagation()
+                }
+              }}
             >
-            <Popup>
+            <Popup autoPan={false}>
               <div style={{ background: '#111827', color: '#f9fafb', 
                             padding: '8px', borderRadius: '4px', minWidth: '160px' }}>
                 <div style={{ fontWeight: 'bold', fontSize: '13px', 
