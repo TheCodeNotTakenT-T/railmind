@@ -3,6 +3,7 @@
 import React from 'react'
 import dynamic from 'next/dynamic'
 import type { Train } from '@/lib/types'
+import { useIncidents } from '@/hooks'
 
 const RailwayMapInner = dynamic(
   () => import('./RailwayMapInner'),
@@ -25,5 +26,6 @@ export default function RailwayMap({
 }: { 
   onTrainSelect?: (train: Train) => void 
 }) {
-  return <RailwayMapInner onTrainSelect={onTrainSelect} />
+  const { incidents } = useIncidents('active')
+  return <RailwayMapInner onTrainSelect={onTrainSelect} incidents={incidents || []} />
 }
