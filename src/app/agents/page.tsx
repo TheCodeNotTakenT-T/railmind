@@ -94,7 +94,7 @@ export default function AgentsPage() {
   }
 
   const getAgentStatus = (name: string) => {
-    const lastLog = agentSummary[name]
+    const lastLog = agentSummary[name as keyof typeof agentSummary]
     if (!lastLog) return false
     const isRunning = lastLog.duration_ms === null
     const minutesSince = (Date.now() - new Date(lastLog.created_at).getTime()) / 60000
@@ -135,7 +135,7 @@ export default function AgentsPage() {
         {AGENT_NAMES.map((name) => {
           const config = AGENT_CONFIG[name]
           const Icon = config.icon
-          const lastLog = agentSummary[name]
+          const lastLog = agentSummary[name as keyof typeof agentSummary]
           const avgDur = agentAvgDuration(name)
           const sparklineData = getSparklineData(name)
           const isActive = getAgentStatus(name)
