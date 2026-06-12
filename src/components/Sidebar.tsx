@@ -44,13 +44,16 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer w-full border ${
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 cursor-pointer w-full border overflow-hidden ${
                 isActive
-                  ? "bg-[#dc2626]/10 text-[#dc2626] border-[#dc2626]/20 font-medium"
-                  : "text-[#9ca3af] border-transparent hover:bg-[#1f2937] hover:text-[#f9fafb]"
+                  ? "bg-railmind-red/10 text-railmind-red border-railmind-red/20 font-bold"
+                  : "text-railmind-subtext border-transparent hover:bg-surface-1 hover:text-white"
               }`}
             >
-              <Icon size={18} />
+              {isActive && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/4 bg-railmind-red rounded-r-full shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
+              )}
+              <Icon size={18} className={isActive ? "drop-shadow-[0_0_5px_rgba(220,38,38,0.5)]" : ""} />
               <span>{item.label}</span>
             </Link>
           );

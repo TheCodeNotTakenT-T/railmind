@@ -17,6 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  ReferenceLine
 } from 'recharts'
 import type { Incident } from '@/lib/types'
 
@@ -56,7 +57,7 @@ export default function MetricsPage() {
 
   // Animated counters
   const delaysPrevented = useCountUp(totalResolved || 12)
-  const passengersSaved = useCountUp(totalDelaysSaved || 540)
+  const animatedPassengersSaved = useCountUp(totalDelaysSaved || 540)
 
   const chartData = [
     { day: 'Jun 3', incidents: 3, resolved: 3, saved: 125 },
@@ -75,41 +76,6 @@ export default function MetricsPage() {
 
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-
-  const statCards = [
-    {
-      label: 'Cascade Delays Prevented',
-      value: delaysPrevented,
-      sub: 'incidents resolved autonomously',
-      icon: ShieldCheck,
-      color: 'text-[#22c55e]',
-      bg: 'bg-[#22c55e]/10 border-[#22c55e]/20',
-    },
-    {
-      label: 'Passenger-Minutes Saved',
-      value: `${passengersSaved} min`,
-      sub: 'across all incidents',
-      icon: Users,
-      color: 'text-[#3b82f6]',
-      bg: 'bg-[#3b82f6]/10 border-[#3b82f6]/20',
-    },
-    {
-      label: 'Average AI Response',
-      value: `${avgResponseTime}s`,
-      sub: 'from detection to resolution',
-      icon: Clock,
-      color: 'text-[#a855f7]',
-      bg: 'bg-[#a855f7]/10 border-[#a855f7]/20',
-    },
-    {
-      label: 'Trains Monitored',
-      value: '50',
-      sub: 'live across 5 corridors',
-      icon: Train,
-      color: 'text-[#9ca3af]',
-      bg: 'bg-[#9ca3af]/10 border-[#9ca3af]/20',
-    },
-  ]
 
   const tooltipStyle = {
     contentStyle: {
@@ -140,79 +106,138 @@ export default function MetricsPage() {
         </div>
       </div>
 
-      {/* ROW 1: Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {statCards.map((card) => {
-          const Icon = card.icon
-          return (
-            <Card
-              key={card.label}
-              className="bg-[#111827] border-[#1f2937] p-5 flex flex-col gap-3"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-[#9ca3af] font-bold uppercase tracking-wider">
-                  {card.label}
-                </span>
-                <div className={`w-9 h-9 rounded-lg border flex items-center justify-center ${card.bg}`}>
-                  <Icon className={`w-4 h-4 ${card.color}`} />
-                </div>
-              </div>
-              <div>
-                <span className={`text-3xl font-black ${card.color}`}>{card.value}</span>
-                <p className="text-[11px] text-[#9ca3af] mt-1">{card.sub}</p>
-              </div>
-            </Card>
-          )
-        })}
+      {/* ROW 1: Hero Layout */}
+      <div className="mb-6">
+        {/* Hero stat */}
+        <div className="glass rounded-xl p-6 mb-4 text-center">
+          <p className="text-xs tracking-[0.2em] text-railmind-subtext uppercase mb-2">
+            Total Impact
+          </p>
+          <p 
+            className="font-mono font-black text-glow-red"
+            style={{ fontSize: 'clamp(2.5rem, 8vw, 4.5rem)', color: '#dc2626' }}
+          >
+            {animatedPassengersSaved}
+          </p>
+          <p className="text-railmind-subtext text-sm mt-2">
+            passenger-minutes saved across {totalResolved} incidents resolved autonomously
+          </p>
+        </div>
+
+        {/* Secondary stats row */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="surface-card rounded-lg p-4 text-center">
+            <p className="text-2xl font-bold font-mono text-railmind-green">
+              {totalResolved}
+            </p>
+            <p className="text-xs text-railmind-subtext mt-1">
+              Cascades Prevented
+            </p>
+          </div>
+          <div className="surface-card rounded-lg p-4 text-center">
+            <p className="text-2xl font-bold font-mono text-railmind-purple">
+              8.2s
+            </p>
+            <p className="text-xs text-railmind-subtext mt-1">
+              Avg AI Response
+            </p>
+          </div>
+          <div className="surface-card rounded-lg p-4 text-center">
+            <p className="text-2xl font-bold font-mono text-railmind-blue">
+              50
+            </p>
+            <p className="text-xs text-railmind-subtext mt-1">
+              Trains Monitored
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* ROW 2: Charts */}
       <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: '3fr 2fr' }}>
         {/* Area Chart */}
-        <Card className="bg-[#111827] border-[#1f2937] p-5">
-          <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">
-            Daily Incidents vs Resolved
-          </h3>
+        <Card className="bg-surface-1 border-railmind-border p-5 relative overflow-hidden">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                Daily Incidents vs Resolved
+              </h3>
+              <p className="text-[10px] text-railmind-subtext mt-1 uppercase tracking-widest">
+                <span className="text-railmind-red font-bold">Red</span> = Total Incidents | <span className="text-railmind-green font-bold">Green</span> = Resolved by RailMind
+              </p>
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-              <XAxis dataKey="day" tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={{ stroke: '#1f2937' }} />
-              <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={{ stroke: '#1f2937' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+              <XAxis dataKey="day" tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip {...tooltipStyle} />
+              {/* Reference line for Today */}
+              <ReferenceLine x="Today" stroke="#3b82f6" strokeDasharray="4 4" strokeWidth={2} label={{ position: 'top', value: 'CURRENT', fill: '#3b82f6', fontSize: 10, fontWeight: 'bold' }} />
+              
+              {/* We stack the areas so the bottom overlaps, simulating the gap fill. Higher opacity for the lower value. */}
               <Area
                 type="monotone"
                 dataKey="incidents"
                 stroke="#dc2626"
-                fill="#dc2626"
-                fillOpacity={0.15}
-                strokeWidth={2}
+                fill="url(#colorIncidents)"
+                strokeWidth={3}
                 name="Incidents"
+                isAnimationActive={true}
               />
               <Area
                 type="monotone"
                 dataKey="resolved"
                 stroke="#22c55e"
-                fill="#22c55e"
-                fillOpacity={0.15}
-                strokeWidth={2}
+                fill="url(#colorResolved)"
+                strokeWidth={3}
                 name="Resolved"
+                isAnimationActive={true}
               />
+              <defs>
+                <linearGradient id="colorIncidents" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#dc2626" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
             </AreaChart>
           </ResponsiveContainer>
         </Card>
 
         {/* Bar Chart */}
-        <Card className="bg-[#111827] border-[#1f2937] p-5">
-          <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">
-            Delay Minutes Saved per Day
-          </h3>
+        <Card className="bg-surface-1 border-railmind-border p-5 relative overflow-hidden">
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              Delay Minutes Saved per Day
+            </h3>
+            <p className="text-[10px] text-railmind-subtext mt-1 uppercase tracking-widest">
+              Cumulative cascade impact prevented
+            </p>
+          </div>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-              <XAxis dataKey="day" tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={{ stroke: '#1f2937' }} />
-              <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={{ stroke: '#1f2937' }} />
-              <Tooltip {...tooltipStyle} />
-              <Bar dataKey="saved" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Minutes Saved" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+              <XAxis dataKey="day" tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip 
+                cursor={{ fill: '#1f2937', opacity: 0.4 }}
+                contentStyle={{ background: '#111827', border: '1px solid #1f2937', borderRadius: '8px' }}
+                itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
+              />
+              <Bar 
+                dataKey="saved" 
+                fill="#3b82f6" 
+                radius={[4, 4, 0, 0]} 
+                name="Minutes Saved"
+                isAnimationActive={true}
+                animationDuration={1500}
+                animationEasing="ease-out"
+              />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -236,13 +261,15 @@ export default function MetricsPage() {
               </tr>
             </thead>
             <tbody>
-              {allIncidents.slice(0, 10).map((incident: Incident) => {
+              {allIncidents.slice(0, 10).map((incident: Incident, idx: number) => {
                 const cascade = incident.cascade_impact as any
                 const cascadeCount = cascade?.cascadeTrains?.length ?? 0
                 return (
                   <tr
                     key={incident.id}
-                    className="border-b border-[#1f2937]/50 hover:bg-[#1f2937]/30 transition-colors"
+                    className={`border-b border-railmind-border/50 transition-all hover:-translate-y-0.5 hover:shadow-lg border-l-2 hover:border-l-railmind-blue ${
+                      idx % 2 === 0 ? 'bg-surface-2' : 'bg-surface-3'
+                    } border-l-transparent`}
                   >
                     <td className="py-2.5 px-3 text-white font-medium">
                       {incident.sentinel_analysis?.trainName ||
@@ -250,28 +277,39 @@ export default function MetricsPage() {
                         '—'}
                     </td>
                     <td className="py-2.5 px-3">
-                      <Badge className={getSeverityBadgeClass(incident.severity)}>
+                      <Badge className={`${getSeverityBadgeClass(incident.severity)} ${incident.severity === 'critical' ? 'glow-red' : ''}`}>
                         {incident.severity.toUpperCase()}
                       </Badge>
                     </td>
-                    <td className="py-2.5 px-3 text-[#f97316] font-bold">
+                    <td className="py-2.5 px-3 text-railmind-orange font-bold">
                       +{incident.delay_minutes} min
                     </td>
-                    <td className="py-2.5 px-3 text-[#9ca3af]">
-                      {cascadeCount > 0 ? `${cascadeCount} trains` : '—'}
+                    <td className="py-2.5 px-3 text-railmind-subtext">
+                      {cascadeCount > 0 ? (
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: Math.min(cascadeCount, 5) }).map((_, i) => (
+                            <span key={i} className="text-[10px]">🔴</span>
+                          ))}
+                          {cascadeCount > 5 && <span className="text-[10px] ml-1">+{cascadeCount - 5}</span>}
+                        </div>
+                      ) : '—'}
                     </td>
                     <td className="py-2.5 px-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          incident.status === 'resolved'
-                            ? 'bg-[#22c55e]/15 text-[#22c55e]'
-                            : 'bg-[#f97316]/15 text-[#f97316]'
-                        }`}
-                      >
-                        {incident.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {incident.status === 'resolved' ? (
+                          <>
+                            <div className="w-1.5 h-1.5 rounded-full bg-railmind-green" />
+                            <span className="text-railmind-green text-[10px] font-bold uppercase tracking-wider">Resolved</span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-1.5 h-1.5 rounded-full bg-railmind-orange animate-pulse" />
+                            <span className="text-railmind-orange text-[10px] font-bold uppercase tracking-wider">Active</span>
+                          </>
+                        )}
+                      </div>
                     </td>
-                    <td className="py-2.5 px-3 text-[#9ca3af] font-mono">
+                    <td className="py-2.5 px-3 text-railmind-subtext font-mono text-[10px]">
                       {formatTime(incident.detected_at)}
                     </td>
                   </tr>

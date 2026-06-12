@@ -33,7 +33,14 @@ export default function RootLayout({
         <main className="flex-1 min-h-screen overflow-y-auto bg-[#0a0e1a] pl-[240px]">
           {children}
         </main>
-        <Toaster richColors position="bottom-right" theme="dark" />
+        <Toaster 
+          richColors 
+          position="top-right" 
+          theme="dark" 
+          toastOptions={{
+            className: 'bg-surface-2 border border-railmind-border text-white shadow-xl shadow-black/40',
+          }}
+        />
       </body>
     </html>
   );

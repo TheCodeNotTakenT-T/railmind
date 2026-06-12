@@ -33,13 +33,13 @@ const SCENARIOS = [
   },
 ]
 
-const PROGRESS_STEPS = [
-  'Injecting delay scenario...', // 0
-  'Sentinel Agent detecting anomaly...', // 1
-  'Cascade Analyzer tracing impact...', // 2
-  'Resolution Agent generating options...', // 3
-  'Communication Agent drafting notifications...', // 4
-  '✅ Analysis complete — opening command center' // 5
+const STAGES = [
+  { id: 0, label: 'Injecting Delay Scenario', agent: null, color: '#9ca3af' },
+  { id: 1, label: 'Sentinel Agent', sublabel: 'Detecting anomaly severity', agent: 'S', color: '#3b82f6' },
+  { id: 2, label: 'Cascade Analyzer', sublabel: 'Tracing downstream impact', agent: 'C', color: '#f97316' },
+  { id: 3, label: 'Resolution Agent', sublabel: 'Generating action plans', agent: 'R', color: '#a855f7' },
+  { id: 4, label: 'Communication Agent', sublabel: 'Drafting notifications', agent: 'M', color: '#22c55e' },
+  { id: 5, label: 'Analysis Complete', agent: null, color: '#22c55e' },
 ]
 
 export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) {
@@ -47,6 +47,7 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
   const [isRunning, setIsRunning] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [lastIncidentId, setLastIncidentId] = useState<string | null>(null)
+  const [showFlash, setShowFlash] = useState(false)
   
   const dropdownRef = useRef<HTMLDivElement>(null)
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -85,15 +86,20 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
         // Map database state to progress steps
         if (incident.notifications) {
           setCurrentStep(5)
-          setIsRunning(false)
-          setLastIncidentId(incidentId)
-          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-          toast.success('Full pipeline complete — incident analyzed', { duration: 3000 })
-          
-          // Small delay before opening modal
+          setShowFlash(true)
+          setTimeout(() => setShowFlash(false), 150)
+
           setTimeout(() => {
-            onIncidentComplete?.(incident)
-          }, 1000)
+            setIsRunning(false)
+            setLastIncidentId(incidentId)
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+            toast.success('Full pipeline complete — incident analyzed', { duration: 3000 })
+            
+            // Small delay before opening modal
+            setTimeout(() => {
+              onIncidentComplete?.(incident)
+            }, 1000)
+          }, 400)
         } else if (incident.resolution_options && incident.resolution_options.length > 0) {
           setCurrentStep(4)
         } else if (incident.cascade_impact) {
@@ -192,7 +198,7 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
           <button
             onClick={() => { if (!isRunning) setIsOpen(!isOpen) }}
             disabled={isRunning}
-            className={`flex items-center gap-2 px-5 py-3 rounded-full font-bold shadow-2xl hover:scale-[1.02] transition-all cursor-pointer border select-none ${
+            className={`btn-press relative overflow-hidden flex items-center gap-2 px-5 py-3 rounded-full font-bold shadow-2xl hover:scale-[1.02] transition-all cursor-pointer border select-none ${
               isRunning 
                 ? 'bg-railmind-muted border-railmind-border text-railmind-subtext cursor-not-allowed' 
                 : 'bg-railmind-red hover:bg-railmind-red/90 text-white border-railmind-red/20'
@@ -207,6 +213,7 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
               <>
                 <Play className="w-5 h-5 fill-white" />
                 <span>Run Demo Scenario</span>
+                <span className="absolute inset-0 -translate-x-full hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               </>
             )}
           </button>
@@ -243,65 +250,127 @@ export default function DemoLauncher({ onIncidentComplete }: DemoLauncherProps) 
       {/* Progress Overlay */}
       <AnimatePresence>
         {isRunning && (
-          <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm" style={{ zIndex: 9995, background: 'rgba(0,0,0,0.8)' }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 9995 }}
+            className="flex flex-col justify-end backdrop-blur-sm"
+          >
+            {/* Dimming backdrop */}
+            <div className="absolute inset-0 bg-black/50" />
+
+            {/* Main panel */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-railmind-surface border border-railmind-border p-6 rounded-2xl w-full max-w-md shadow-2xl flex flex-col gap-5 text-white"
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 24 }}
+              className="relative glass rounded-t-3xl border-t border-white/10 p-8 w-full max-w-4xl mx-auto shadow-2xl"
             >
-              <div className="flex items-center gap-2 border-b border-railmind-border pb-3">
-                <AlertTriangle className="w-5 h-5 text-railmind-yellow animate-pulse" />
-                <h3 className="font-extrabold text-md uppercase tracking-wider">RailMind Agent Operations</h3>
+              {/* Title with typing reveal */}
+              <div className="text-center mb-6">
+                <p className="text-[10px] tracking-[0.3em] text-railmind-red font-mono font-bold mb-1">
+                  RAILMIND AUTONOMOUS PIPELINE
+                </p>
+                <h3 className="text-lg font-bold text-white">
+                  {currentStep < 5 ? 'Agents Processing...' : 'Pipeline Complete'}
+                </h3>
               </div>
 
-              {/* Steps Progress List */}
-              <div className="space-y-4">
-                {PROGRESS_STEPS.map((step, idx) => {
-                  const isCompleted = idx < currentStep
-                  const isCurrent = idx === currentStep
-                  const isPending = idx > currentStep
-
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`flex items-center gap-3 transition-all duration-300 ${
-                        isCurrent ? 'scale-[1.02] font-semibold text-white' : 'text-railmind-subtext opacity-60'
-                      }`}
-                    >
-                      {/* Indicator Icon */}
-                      <div className="shrink-0">
-                        {isCompleted ? (
-                          <CheckCircle className="w-5 h-5 text-railmind-green fill-railmind-green/10" />
-                        ) : isCurrent ? (
-                          <Loader2 className="w-5 h-5 text-railmind-blue animate-spin" />
-                        ) : (
-                          <div className="w-5 h-5 rounded-full border border-railmind-border flex items-center justify-center text-[10px] font-mono select-none">
-                            {idx + 1}
-                          </div>
+              {/* Pipeline node visualization */}
+              <div className="flex items-center justify-between mb-8 px-2">
+                {STAGES.filter(s => s.agent).map((stage, i, arr) => (
+                  <React.Fragment key={stage.id}>
+                    <div className="flex flex-col items-center gap-2">
+                      <motion.div
+                        className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm relative"
+                        style={{
+                          background: currentStep > stage.id 
+                            ? `${stage.color}30` 
+                            : currentStep === stage.id 
+                            ? `${stage.color}20`
+                            : 'rgba(255,255,255,0.03)',
+                          border: `1.5px solid ${
+                            currentStep >= stage.id ? stage.color : '#1f2937'
+                          }`,
+                          color: currentStep >= stage.id ? stage.color : '#374151'
+                        }}
+                        animate={currentStep === stage.id ? {
+                          boxShadow: [
+                            `0 0 0px ${stage.color}00`,
+                            `0 0 24px ${stage.color}, 0 0 40px ${stage.color}60`,
+                            `0 0 0px ${stage.color}00`
+                          ],
+                          scale: [1, 1.08, 1]
+                        } : {}}
+                        transition={{ repeat: Infinity, duration: 1.3 }}
+                      >
+                        {currentStep > stage.id ? '✓' : stage.agent}
+                      </motion.div>
+                    </div>
+                    {i < arr.length - 1 && (
+                      <div className={`flex-1 mx-1 relative overflow-hidden transition-all ${currentStep === stage.id ? 'h-[2px]' : 'h-px'}`}>
+                        <div 
+                          className="absolute inset-0"
+                          style={{
+                            background: currentStep > stage.id 
+                              ? stage.color 
+                              : '#1f2937',
+                            opacity: currentStep > stage.id ? 0.5 : 1
+                          }}
+                        />
+                        {currentStep === stage.id && (
+                          <div className="absolute inset-0 pipeline-active" />
                         )}
                       </div>
-                      
-                      {/* Step Text */}
-                      <span className={`text-xs ${isCurrent ? 'text-white font-bold' : ''}`}>
-                        {step}
-                      </span>
-                    </div>
-                  )
-                })}
+                    )}
+                  </React.Fragment>
+                ))}
               </div>
 
-              {/* Current Active Step Highlight */}
-              <div className="bg-railmind-bg/80 border border-railmind-border p-3 rounded-lg flex items-start gap-2.5 mt-2">
-                <Info className="w-4 h-4 text-railmind-blue mt-0.5 shrink-0" />
-                <p className="text-[11px] leading-relaxed text-railmind-text">
-                  Multi-agent AI network resolves platform conflicts, crew roster handoffs, and passenger SMS dispatch automatically.
+              {/* Current stage description */}
+              <div className="text-center min-h-[50px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentStep}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <p className="text-white font-medium">
+                      {STAGES[currentStep]?.label}
+                    </p>
+                    {STAGES[currentStep]?.sublabel && (
+                      <p className="text-railmind-subtext text-sm mt-1">
+                        {STAGES[currentStep].sublabel}
+                      </p>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Bottom info line */}
+              <div className="mt-6 pt-4 border-t border-white/[0.06] text-center">
+                <p className="text-xs text-railmind-subtext">
+                  Multi-agent AI network resolves platform conflicts, crew handoffs, and passenger notifications autonomously
                 </p>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Completion Flash */}
+      {showFlash && (
+        <motion.div
+          initial={{ opacity: 0.6 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.4 }}
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'white', pointerEvents: 'none' }}
+        />
+      )}
     </>
   )
 }

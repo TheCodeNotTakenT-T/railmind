@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+import { motion } from 'framer-motion'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -25,9 +26,48 @@ interface IncidentDetailModalProps {
 export default function IncidentDetailModal({ incident, onClose }: IncidentDetailModalProps) {
   const { trains } = useTrains()
   const [applyingIndex, setApplyingIndex] = useState<number | null>(null)
+  const [appliedIndex, setAppliedIndex] = useState<number | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   if (!incident) return null
+
+  const passengersTarget = (incident.cascade_impact as any)?.passengersAffected || 0
+  const [animatedPassengers, setAnimatedPassengers] = useState(0)
+
+  useEffect(() => {
+    if (!passengersTarget) return
+    const start = Date.now()
+    const duration = 1200
+    const timer = setInterval(() => {
+      const progress = Math.min((Date.now() - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setAnimatedPassengers(Math.round(passengersTarget * eased))
+      if (progress >= 1) clearInterval(timer)
+    }, 16)
+    return () => clearInterval(timer)
+  }, [passengersTarget])
+
+  const [remainingMinutes, setRemainingMinutes] = useState(
+    (incident.cascade_impact as any)?.timeToImpact || 
+    (incident as any)?.sentinel_analysis?.timeToImpact || 18
+  )
+
+  useEffect(() => {
+    const detectedAt = new Date(incident.detected_at).getTime()
+    const timeToImpact = (incident.cascade_impact as any)?.timeToImpact || 
+      (incident as any)?.sentinel_analysis?.timeToImpact || 18
+    const deadline = detectedAt + timeToImpact * 60000
+    
+    const timer = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 60000))
+      setRemainingMinutes(remaining)
+    }, 30000)
+    
+    const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 60000))
+    setRemainingMinutes(remaining)
+    
+    return () => clearInterval(timer)
+  }, [incident.detected_at, incident.cascade_impact])
 
   const train = trains.find((t) => t.id === incident.trigger_train_id)
   const trainName = train ? train.name : incident.sentinel_analysis?.trainName || incident.trigger_train_id || 'Train'
@@ -60,7 +100,8 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
           description: `Estimated ${opt?.estimatedDelayReduction || 0} minutes saved`,
           duration: 4000,
         })
-        onClose()
+        setAppliedIndex(index)
+        setTimeout(() => onClose(), 1500)
       } else {
         toast.error(`Error: ${data.error || 'Failed to apply resolution'}`)
       }
@@ -78,7 +119,11 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
   return (
     <Dialog open={!!incident} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="max-w-4xl bg-railmind-bg border-railmind-border p-6 rounded-2xl text-white" style={{ zIndex: 9999 }}>
-        
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
         {/* Header */}
         <div className="flex justify-between items-start border-b border-railmind-border pb-4 mb-6 relative">
           <div className="flex flex-col gap-1">
@@ -117,6 +162,27 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
               Cascade Analysis
             </h2>
             
+            {incident.cascade_impact && (
+              <div className="glass rounded-lg p-4 mb-4 border-l-2 border-railmind-red">
+                <p className="text-sm text-railmind-subtext">
+                  <span className="text-2xl font-bold text-white font-mono">
+                    {animatedPassengers}
+                  </span>
+                  {' '}passengers affected across{' '}
+                  <span className="text-white font-semibold">
+                    {cascadeData?.cascadeTrains?.length || 0}
+                  </span>
+                  {' '}cascade trains. Cascade unrecoverable in{' '}
+                  <span className={`font-mono font-bold ${
+                    remainingMinutes <= 5 ? 'countdown-urgent text-railmind-red' : 
+                    remainingMinutes <= 15 ? 'countdown-warning text-railmind-orange' : 'countdown-safe text-railmind-green'
+                  }`}>
+                    {remainingMinutes} min
+                  </span>
+                </p>
+              </div>
+            )}
+
             {!incident.cascade_impact || !incident.cascade_impact.cascadeTrains ? (
               <div className="flex flex-col items-center gap-3 py-6">
                 <p className="text-railmind-subtext text-sm">
@@ -231,17 +297,19 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
                   return (
                     <Card 
                       key={i} 
-                      className={`flex flex-col justify-between bg-railmind-surface/80 border p-4 gap-3 transition-all ${
-                        isBest ? 'border-railmind-green/60 ring-1 ring-railmind-green/20' : 'border-railmind-border'
+                      className={`flex flex-col justify-between bg-railmind-surface/80 border p-4 gap-3 transition-transform duration-200 hover:-translate-y-0.5 ${
+                        isBest ? 'border-railmind-green/60 ring-1 ring-railmind-green/20 border-l-2 border-l-railmind-green bg-railmind-green/5' : 'border-railmind-border'
                       }`}
                     >
                       <div className="flex flex-col gap-2">
-                        <div className="flex justify-between items-start gap-1">
-                          <span className="font-bold text-sm text-white line-clamp-1">{opt.title}</span>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h4 className="font-semibold text-white text-base">
+                            {opt.title}
+                          </h4>
                           {isBest && (
-                            <Badge variant="success" className="text-[9px] px-1 py-0 font-bold uppercase tracking-wider whitespace-nowrap">
-                              Best Option
-                            </Badge>
+                            <span className="text-[10px] font-bold tracking-wider text-railmind-green bg-railmind-green/10 px-2 py-0.5 rounded-full border border-railmind-green/30 whitespace-nowrap flex-shrink-0">
+                              RECOMMENDED
+                            </span>
                           )}
                         </div>
                         
@@ -254,29 +322,42 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
                           </span>
                         </div>
 
-                        {/* Immediate Actions */}
-                        <div className="space-y-1.5 mt-1">
-                          <span className="text-[10px] font-bold text-railmind-subtext uppercase block">Action Timeline</span>
-                          <ul className="space-y-1 text-xs">
+                        {/* Immediate Actions Timeline */}
+                        <div className="mt-3">
+                          <span className="text-[10px] font-bold text-railmind-subtext uppercase block mb-2">Execution Timeline</span>
+                          <div className="relative pl-3 border-l border-railmind-blue/20 ml-1.5 space-y-3">
                             {opt.immediateActions?.map((action: string, j: number) => (
-                              <li key={j} className="text-railmind-text flex gap-1.5 items-start">
-                                <span className="text-railmind-blue font-mono text-[10px] bg-railmind-blue/10 px-1 py-0.5 rounded mt-0.5 whitespace-nowrap">
-                                  {action.slice(0, 7)}
-                                </span>
-                                <span className="line-clamp-2">{action.slice(8)}</span>
-                              </li>
+                              <div key={j} className="relative">
+                                <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-railmind-blue ring-4 ring-railmind-surface shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                                <div className="flex flex-col">
+                                  <span className="font-mono text-railmind-blue text-[10px] font-bold tracking-wider mb-0.5">
+                                    {action.slice(0, 7)}
+                                  </span>
+                                  <span className="text-xs text-white/90 leading-snug">
+                                    {action.slice(8)}
+                                  </span>
+                                </div>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Tradeoffs */}
-                      <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-railmind-border/50">
+                      {/* Tradeoffs & Apply Button */}
+                      <div className="flex flex-col gap-3 mt-4 pt-3 border-t border-railmind-border/50">
                         <p className="text-[11px] text-railmind-subtext italic line-clamp-2">
                           Tradeoff: {opt.tradeoffs}
                         </p>
                         
-                        {incident.status !== 'resolved' ? (
+                        {appliedIndex === i ? (
+                          <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="flex items-center justify-center gap-2 py-2 bg-railmind-green/20 text-railmind-green rounded-lg text-sm font-semibold border border-railmind-green/30"
+                          >
+                            ✓ Resolution Applied
+                          </motion.div>
+                        ) : incident.status !== 'resolved' ? (
                           <button
                             disabled={applyingIndex !== null}
                             onClick={() => handleApplyResolution(i)}
@@ -370,17 +451,27 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
                 <TabsContent value="brief" className="flex flex-col gap-3">
                   <span className="text-xs font-bold text-white uppercase">Critical Station Duty Checklist</span>
                   <div className="bg-railmind-surface border border-railmind-border rounded-lg p-3 space-y-2.5">
-                    {notifications.stationMasterBrief?.map((brief: string, idx: number) => (
-                      <div key={idx} className="flex gap-2.5 items-start text-xs border-b border-railmind-border/30 pb-2 last:border-0 last:pb-0">
-                        <input type="checkbox" className="w-4 h-4 rounded-full border border-railmind-border accent-railmind-green cursor-pointer mt-0.5" />
-                        <div className="flex gap-2">
-                          <span className="font-mono text-railmind-blue bg-railmind-blue/10 px-1 py-0.5 rounded text-[10px] h-fit select-none">
-                            {brief.slice(0, 7)}
-                          </span>
-                          <span className="text-white font-medium">{brief.slice(8)}</span>
+                    {notifications.stationMasterBrief?.map((brief: string, idx: number) => {
+                      return (
+                        <div key={idx} className="group flex gap-2.5 items-start text-xs border-b border-railmind-border/30 pb-2 last:border-0 last:pb-0">
+                          <div className="relative mt-0.5">
+                            <input 
+                              type="checkbox" 
+                              className="peer w-4 h-4 appearance-none rounded-full border border-railmind-border checked:bg-railmind-green checked:border-railmind-green transition-all cursor-pointer" 
+                            />
+                            <CheckCircle className="absolute inset-0 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none scale-75" />
+                          </div>
+                          <div className="flex gap-2">
+                            <span className="font-mono text-railmind-blue bg-railmind-blue/10 px-1 py-0.5 rounded text-[10px] h-fit select-none group-has-[:checked]:opacity-50 transition-opacity">
+                              {brief.slice(0, 7)}
+                            </span>
+                            <span className="text-white font-medium group-has-[:checked]:text-railmind-subtext group-has-[:checked]:line-through transition-all duration-300">
+                              {brief.slice(8)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </TabsContent>
 
@@ -407,8 +498,8 @@ export default function IncidentDetailModal({ incident, onClose }: IncidentDetai
               </Tabs>
             </div>
           )}
-          
         </div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   )

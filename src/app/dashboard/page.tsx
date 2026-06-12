@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import IncidentPanel from '@/components/incidents/IncidentPanel'
 import IncidentDetailModal from '@/components/incidents/IncidentDetailModal'
 import AgentFeed from '@/components/agents/AgentFeed'
@@ -43,73 +44,101 @@ export default function DashboardPage() {
   const activeCount = activeIncidents.length
   const resolvedCount = resolvedIncidents.length
 
+  const [currentTime, setCurrentTime] = useState<Date | null>(null)
+  useEffect(() => {
+    setCurrentTime(new Date())
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const formattedTime = currentTime 
+    ? currentTime.toLocaleTimeString('en-IN', { 
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+      })
+    : '--:--:--'
+
   const animTrains = useCountUp(trains.length)
   const animActive = useCountUp(activeCount)
   const animResolved = useCountUp(resolvedCount)
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#0a0e1a] text-white">
+    <div className="flex flex-col h-screen overflow-hidden bg-railmind-bg text-white">
       {/* HEADER BAR */}
-      <header className="h-14 flex-shrink-0 flex items-center justify-between px-6 border-b border-railmind-border bg-[#0d1117]">
-        <div className="flex flex-col">
-          <h1 className="text-sm font-black uppercase tracking-wider text-white">
-            Railway Operations Intelligence Center
-          </h1>
-          <span className="text-[10px] text-railmind-subtext font-semibold uppercase">
-            Live Network Monitor • RailMind Autonomous Agentic System
+      <motion.header 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+        className="h-16 flex-shrink-0 flex items-center justify-between px-6 bg-railmind-surface relative z-10"
+        style={{ borderBottom: '1px solid transparent', borderImage: 'linear-gradient(90deg, transparent, rgba(220,38,38,0.3), transparent) 1' }}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] text-railmind-subtext font-bold uppercase tracking-[0.2em] pt-0.5">
+            Operations Intelligence Center
           </span>
         </div>
 
-        {/* Stats Badges */}
+        {/* Center: System Status */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06]">
+          <span className="w-2 h-2 rounded-full bg-railmind-green animate-ping absolute" />
+          <span className="w-2 h-2 rounded-full bg-railmind-green relative" />
+          <span className="text-[10px] font-bold text-white uppercase tracking-widest">
+            System Active
+          </span>
+          <span className="text-railmind-subtext mx-1">•</span>
+          <span className="text-xs font-mono text-railmind-subtext tracking-wider">
+            {formattedTime}
+          </span>
+        </div>
+
+        {/* Right: Stats Badges */}
         <div className="flex items-center gap-3">
-          {/* Trains Badge */}
-          <div className="bg-[#3b82f6]/10 border border-[#3b82f6]/20 px-3 py-1 rounded-lg flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
-            <span className="text-xs text-railmind-subtext">
-              Trains Monitored: <strong className="text-white font-mono">{animTrains}</strong>
-            </span>
+          <div className="flex flex-col items-end">
+            <span className="text-[9px] text-railmind-subtext uppercase tracking-widest font-semibold mb-0.5">Trains Monitored</span>
+            <div className="font-mono text-base font-bold leading-none">{animTrains}</div>
+          </div>
+          
+          <div className="h-8 w-px bg-white/[0.1] mx-2"></div>
+
+          <div className="flex flex-col items-end">
+            <span className="text-[9px] text-railmind-subtext uppercase tracking-widest font-semibold mb-0.5">Active Delays</span>
+            <motion.div
+              key={activeCount}
+              initial={{ scale: 1.4, color: '#dc2626' }}
+              animate={{ scale: 1, color: activeCount > 0 ? '#dc2626' : '#ffffff' }}
+              transition={{ duration: 0.4 }}
+              className={`font-mono text-base font-bold leading-none ${activeCount > 0 ? 'text-railmind-red animate-pulse' : 'text-white'}`}
+            >
+              {animActive}
+            </motion.div>
           </div>
 
-          {/* Active Incidents Badge */}
-          <div className={`px-3 py-1 rounded-lg flex items-center gap-1.5 border transition-all ${
-            activeCount > 0 
-              ? 'bg-railmind-red/10 border-railmind-red/30' 
-              : 'bg-railmind-muted/20 border-railmind-border'
-          }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${activeCount > 0 ? 'bg-railmind-red animate-ping' : 'bg-railmind-subtext'}`} />
-            <span className="text-xs text-railmind-subtext">
-              Active Delays: <strong className={`${activeCount > 0 ? 'text-railmind-red' : 'text-white'} font-mono`}>{animActive}</strong>
-            </span>
-          </div>
+          <div className="h-8 w-px bg-white/[0.1] mx-2"></div>
 
-          {/* Delays Prevented Badge */}
-          <div className="bg-railmind-green/10 border border-railmind-green/20 px-3 py-1 rounded-lg flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-railmind-green" />
-            <span className="text-xs text-railmind-subtext">
-              Mitigated: <strong className="text-white font-mono">{animResolved}</strong>
-            </span>
-          </div>
-
-          {/* Agents Badge */}
-          <div className="bg-railmind-surface border border-railmind-border px-3 py-1 rounded-lg flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-railmind-green animate-pulse" />
-            <span className="text-xs text-railmind-subtext">
-              Agents: <strong className="text-railmind-green uppercase font-bold tracking-wider">Ready</strong>
-            </span>
+          <div className="flex flex-col items-end">
+            <span className="text-[9px] text-railmind-subtext uppercase tracking-widest font-semibold mb-0.5">Cascade Prevented</span>
+            <div className="font-mono text-base font-bold text-railmind-green leading-none">{animResolved}</div>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* MAIN CONTENT — explicit grid */}
       <div className="flex-1 grid overflow-hidden" style={{ gridTemplateColumns: '1fr 400px' }}>
         
         {/* Left: Map */}
-        <div className="map-wrapper h-full overflow-hidden">
-          <RailwayMap onTrainSelect={setSelectedTrain} />
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
+          className="map-wrapper h-full overflow-hidden"
+        >
+          <RailwayMap incidents={activeIncidents} />
+        </motion.div>
 
         {/* Right: Panels — must be above map */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
           className="flex flex-col h-full overflow-hidden border-l border-railmind-border bg-[#0d1117]"
           style={{ position: 'relative', zIndex: 20 }}
         >
@@ -144,7 +173,7 @@ export default function DashboardPage() {
           <div className="flex-1 overflow-y-auto min-h-0">
             <AgentFeed />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Incident Details Analysis Modal */}
