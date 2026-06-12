@@ -92,7 +92,7 @@ function AnimatedTrainMarker({ train, color, radius, isCritical, isDelayed }: { 
   const [pos, setPos] = useState<[number, number]>([train.current_lat || 20.5937, train.current_lng || 78.9629])
   const prevPosRef = useRef<[number, number]>(pos)
   const targetPosRef = useRef<[number, number]>(pos)
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | null>(null)
   
   useEffect(() => {
     const target: [number, number] = [train.current_lat || 20.5937, train.current_lng || 78.9629]
