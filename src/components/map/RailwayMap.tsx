@@ -21,11 +21,7 @@ const RailwayMapInner = dynamic(
   }
 )
 
-export default function RailwayMap({ 
-  onTrainSelect 
-}: { 
-  onTrainSelect?: (train: Train) => void 
-}) {
+export default function RailwayMap() {
   const { incidents } = useIncidents('active')
-  return <RailwayMapInner onTrainSelect={onTrainSelect} incidents={incidents || []} />
+  return <RailwayMapInner incidents={incidents || []} />
 }
