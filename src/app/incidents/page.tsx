@@ -32,8 +32,8 @@ export default function IncidentsPage() {
 
   // Sort Active list by most urgent Time to Cascade first
   const activeList = (active || []).sort((a, b) => {
-    const aTime = a.cascade_impact?.estimated_time_to_cascade_mins ?? 999
-    const bTime = b.cascade_impact?.estimated_time_to_cascade_mins ?? 999
+    const aTime = a.cascade_impact?.timeToImpact ?? 999
+    const bTime = b.cascade_impact?.timeToImpact ?? 999
     return aTime - bTime
   })
   const resolvedList = resolved || []
