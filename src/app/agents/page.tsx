@@ -124,7 +124,7 @@ export default function AgentsPage() {
         </div>
         {isAgentRunning && (
           <div className="flex items-center gap-2 bg-[#22c55e]/10 border border-[#22c55e]/20 px-3 py-1.5 rounded-full">
-            <span className="w-2 h-2 rounded-full bg-[#22c55e] animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
             <span className="text-xs font-bold text-[#22c55e] uppercase tracking-wider">Agents Active</span>
           </div>
         )}
@@ -148,7 +148,6 @@ export default function AgentsPage() {
             >
               {/* Status Indicator Dot */}
               <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                {isActive && <span className="absolute inline-flex h-2 w-2 rounded-full bg-[#22c55e] opacity-75 animate-ping"></span>}
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${isActive ? 'bg-[#22c55e]' : 'bg-[#374151]'}`}></span>
               </div>
 

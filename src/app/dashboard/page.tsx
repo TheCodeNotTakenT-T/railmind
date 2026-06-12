@@ -79,7 +79,6 @@ export default function DashboardPage() {
 
         {/* Center: System Status */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.06]">
-          <span className="w-2 h-2 rounded-full bg-railmind-green animate-ping absolute" />
           <span className="w-2 h-2 rounded-full bg-railmind-green relative" />
           <span className="text-[10px] font-bold text-white uppercase tracking-widest">
             System Active
