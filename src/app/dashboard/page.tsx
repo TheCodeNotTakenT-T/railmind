@@ -130,7 +130,7 @@ export default function DashboardPage() {
           transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
           className="map-wrapper h-full overflow-hidden"
         >
-          <RailwayMap incidents={activeIncidents} />
+          <RailwayMap />
         </motion.div>
 
         {/* Right: Panels — must be above map */}
